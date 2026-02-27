@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { retrieveAndAnswer } from "@/lib/rag";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
     try {
         const { question, projectId } = await req.json();

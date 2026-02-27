@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { processSource } from "@/lib/pipeline";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
     try {
         const data = await req.json();

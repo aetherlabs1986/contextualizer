@@ -1,11 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Google GenAI SDK
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+// Lazy-initialize the Google GenAI SDK (avoids crash during Vercel build when env vars aren't available)
+let _ai: GoogleGenAI | null = null;
+function getAI(): GoogleGenAI {
+    if (!_ai) {
+        _ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
+    }
+    return _ai;
+}
 
 // Generic wrapper for JSON generation
 export async function generateJSON(prompt: string, model: string = "gemini-2.5-pro") {
     try {
+        const ai = getAI();
         const response = await ai.models.generateContent({
             model: model,
             contents: prompt,
@@ -24,6 +31,7 @@ export async function generateJSON(prompt: string, model: string = "gemini-2.5-p
 // Generic wrapper for text generation
 export async function generateText(prompt: string, model: string = "gemini-2.5-flash") {
     try {
+        const ai = getAI();
         const response = await ai.models.generateContent({
             model: model,
             contents: prompt,
@@ -38,6 +46,7 @@ export async function generateText(prompt: string, model: string = "gemini-2.5-f
 // Wrapper for Embeddings
 export async function generateEmbedding(text: string): Promise<number[]> {
     try {
+        const ai = getAI();
         const response = await ai.models.embedContent({
             model: "gemini-embedding-001",
             contents: text,
