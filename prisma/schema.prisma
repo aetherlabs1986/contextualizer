@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model users {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  created_at DateTime @default(now())
+
+  projects          projects[]
+  sources           sources[]
+  chunks            chunks[]
+  embeddings        embeddings[]
+  insights          insights[]
+  profile_snapshots profile_snapshots[]
+  context_packs     context_packs[]
+  chat_threads      chat_threads[]
+  settings          settings?
+  prompts           prompts[]
+}
+
+model projects {
+  id               String   @id @default(uuid())
+  user_id          String
+  name             String
+  description      String?
+  status           String   // active | dormant | critical
+  last_activity_at DateTime @default(now())
+  created_at       DateTime @default(now())
+
+  user              users               @relation(fields: [user_id], references: [id])
+  sources           sources[]
+  chunks            chunks[]
+  embeddings        embeddings[]
+  insights          insights[]
+  profile_snapshots profile_snapshots[]
+  context_packs     context_packs[]
+  chat_threads      chat_threads[]
+}
+
+model sources {
+  id                String    @id @default(uuid())
+  user_id           String
+  project_id        String?
+  title             String
+  source_type       String    // chat | document | link | audio
+  importance        String    // low | normal | high | critical
+  source_url        String?
+  file_path         String?
+  raw_text          String?
+  extracted_text    String?
+  transcript_text   String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  processing_status String    // queued | processing | done | failed
+  processing_error  String?
+  
+  user       users       @relation(fields: [user_id], references: [id])
+  project    projects?   @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  chunks     chunks[]
+  embeddings embeddings[]
+  insights   insights[]
+}
+
+model chunks {
+  id          String   @id @default(uuid())
+  user_id     String
+  project_id  String?
+  source_id   String
+  chunk_index Int
+  chunk_text  String
+  token_count Int
+  created_at  DateTime @default(now())
+
+  user       users        @relation(fields: [user_id], references: [id])
+  project    projects?    @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  source     sources      @relation(fields: [source_id], references: [id])
+  embeddings embeddings[]
+}
+
+model embeddings {
+  id               String   @id @default(uuid())
+  user_id          String
+  project_id       String?
+  source_id        String
+  chunk_id         String
+  embedding_vector String   // Stored as JSON string [0.1, ... ]
+  created_at       DateTime @default(now())
+
+  user    users     @relation(fields: [user_id], references: [id])
+  project projects? @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  source  sources   @relation(fields: [source_id], references: [id])
+  chunk   chunks    @relation(fields: [chunk_id], references: [id])
+}
+
+model insights {
+  id            String    @id @default(uuid())
+  user_id       String
+  project_id    String?
+  source_id     String
+  insight_type  String    // decision | lead | knowledge | risk | strategic_shift | task | personal_context
+  title         String
+  details       String
+  entities_json String
+  date_inferred DateTime?
+  confidence    Float
+  created_at    DateTime  @default(now())
+
+  user    users     @relation(fields: [user_id], references: [id])
+  project projects? @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  source  sources   @relation(fields: [source_id], references: [id])
+}
+
+model profile_snapshots {
+  id                        String   @id @default(uuid())
+  user_id                   String
+  project_id                String?  // Null for global, UUID for project-specific
+  generated_at              DateTime @default(now())
+  profile_json              String
+  profile_markdown          String
+  version_label             String   // e.g., "v1.0"
+  created_from_sources_json String   // list of source_ids
+  created_at                DateTime @default(now())
+  is_current                Boolean  @default(false)
+
+  user          users           @relation(fields: [user_id], references: [id])
+  project       projects?       @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  context_packs context_packs[]
+}
+
+model context_packs {
+  id                  String   @id @default(uuid())
+  user_id             String
+  project_id          String?
+  profile_snapshot_id String
+  pack_type           String   // full | current_state | quick
+  pack_text           String
+  version_label       String
+  is_pinned           Boolean  @default(false)
+  created_at          DateTime @default(now())
+
+  user             users             @relation(fields: [user_id], references: [id])
+  project          projects?         @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  profile_snapshot profile_snapshots @relation(fields: [profile_snapshot_id], references: [id])
+}
+
+model shared_links {
+  id              String    @id @default(uuid())
+  token           String    @unique // Long random token included in url
+  context_pack_id String
+  pack_type       String
+  project_id      String?
+  expires_at      DateTime?
+  password_hash   String?
+  created_at      DateTime  @default(now())
+}
+
+model chat_threads {
+  id         String   @id @default(uuid())
+  user_id    String
+  title      String
+  project_id String?
+  created_at DateTime @default(now())
+
+  user          users           @relation(fields: [user_id], references: [id])
+  project       projects?       @relation(fields: [project_id], references: [id], onDelete: SetNull)
+  chat_messages chat_messages[]
+}
+
+model chat_messages {
+  id                 String   @id @default(uuid())
+  thread_id          String
+  role               String   // user | assistant
+  content            String
+  created_at         DateTime @default(now())
+  used_sources_json  String   // list of source_ids
+
+  thread chat_threads @relation(fields: [thread_id], references: [id])
+}
+
+model prompts {
+  id            String   @id @default(uuid())
+  user_id       String
+  template_name String   @unique // INSIGHT_EXTRACT_V1 | PROFILE_MERGE_V1 | RERANK_CHUNKS_V1 | ANSWER_WITH_CITATIONS_V1
+  prompt_text   String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  
+  user users @relation(fields: [user_id], references: [id])
+}
+
+model settings {
+  id                String   @id @default(uuid())
+  user_id           String   @unique
+  llm_provider      String   @default("google") // google | openai
+  api_key           String?
+  truthfulness_mode String   @default("strict") // strict | relaxed
+  lang              String   @default("es-ES")
+  updated_at        DateTime @updatedAt
+  
+  user users @relation(fields: [user_id], references: [id])
+}

@@ -1,0 +1,4 @@
+Failed to import config file as TypeScript from "C:\Users\Usuario\Desktop\Dev\Contextualizer\prisma.config.ts". Error: Error: Cannot find module 'dotenv/config'
+Require stack:
+- C:\Users\Usuario\Desktop\Dev\Contextualizer\prisma.config.ts
+- C:\Users\Usuario\Desktop\Dev\Contextualizer\node_modules\prisma\build\index.js
