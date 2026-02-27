@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatDistanceToNow } from "date-fns";
 import { getDashboardData } from "./actions";
 
 export default function DashboardPage() {
@@ -14,8 +13,10 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [dashboardMeta, setDashboardMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const res = await fetch(`/api/profile${activeProjectId ? `?projectId=${activeProjectId}` : ""}`);
     const json = await res.json();
@@ -30,11 +31,41 @@ export default function DashboardPage() {
     setDashboardMeta(meta);
 
     setLoading(false);
-  };
+  }, [activeProjectId]);
 
   useEffect(() => {
     fetchData();
-  }, [activeProjectId]);
+  }, [fetchData]);
+
+  // Load saved avatar from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("contextualizer_avatar");
+    if (saved) setAvatarUrl(saved);
+  }, []);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setAvatarUrl(result);
+      localStorage.setItem("contextualizer_avatar", result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Extract user name from profile
+  const userName = profile?.identity_snapshot?.roles?.[0]
+    || profile?.identity_snapshot?.summary?.split(" ").slice(0, 2).join(" ")
+    || "Mi Perfil";
+
+  const getStatusColor = (status: string) => {
+    const s = (status || "").toLowerCase();
+    if (s.includes("risk") || s.includes("dormant") || s.includes("critical")) return { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400", border: "border-amber-500/20", glow: "shadow-[0_0_8px_#f59e0b]" };
+    if (s.includes("pending") || s.includes("idea")) return { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400", border: "border-blue-500/20", glow: "shadow-[0_0_8px_#3b82f6]" };
+    return { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400", border: "border-emerald-500/20", glow: "shadow-[0_0_8px_#10b981]" };
+  };
 
   if (loading) {
     return (
@@ -70,56 +101,72 @@ export default function DashboardPage() {
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/20 via-transparent to-transparent blur-[100px]"></div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-10 relative z-10">
-            {/* ORB AVATAR */}
-            <div className="relative size-36 shrink-0 group-hover:scale-[1.02] transition-transform duration-700 ease-out">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
+            {/* AVATAR — clickable to change */}
+            <div
+              className="relative size-32 shrink-0 group-hover:scale-[1.02] transition-transform duration-700 ease-out cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              title="Haz clic para cambiar la foto"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/30 to-accent-cyan/30 blur-2xl animate-pulse"></div>
-              <div className="orb-glow size-full rounded-full relative overflow-hidden border border-white/20 backdrop-blur-sm">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1974&auto=format&fit=crop')] bg-cover opacity-60 mix-blend-overlay animate-[spin_120s_linear_infinite]"></div>
-                <svg className="absolute inset-0 w-full h-full opacity-40 mix-blend-screen" viewBox="0 0 100 100">
-                  <path className="animate-pulse" d="M10,50 Q30,20 50,50 T90,50" fill="none" stroke="white" strokeDasharray="2 4" strokeWidth="0.5"></path>
-                  <path d="M20,80 Q50,20 80,80" fill="none" opacity="0.8" stroke="#22d3ee" strokeWidth="0.3"></path>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-5xl text-white/90 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-light">fingerprint</span>
-                </div>
-                <div className="absolute top-[10%] left-[10%] w-[30%] h-[20%] bg-gradient-to-b from-white/40 to-transparent rounded-full blur-[2px]"></div>
+              <div className="size-full rounded-full relative overflow-hidden border-2 border-white/20 backdrop-blur-sm">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="size-full object-cover" />
+                ) : (
+                  <>
+                    <div className="orb-glow size-full absolute inset-0"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-white/80 drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]">person</span>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="absolute bottom-1 right-1">
+              {/* Upload hint overlay */}
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
+              </div>
+              <div className="absolute bottom-0 right-0">
                 <div className="size-3 bg-emerald-500 rounded-full shadow-[0_0_12px_#10b981] ring-2 ring-os-bg"></div>
               </div>
             </div>
 
             {/* BIO */}
-            <div className="flex-1 text-center md:text-left pt-2">
-              <div className="flex flex-col md:flex-row md:items-baseline gap-4 mb-3 justify-center md:justify-start">
-                <h1 className="text-4xl font-light text-white tracking-[-0.03em]">Global Identity</h1>
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row md:items-baseline gap-3 mb-2 justify-center md:justify-start">
+                <h1 className="text-3xl md:text-4xl font-light text-white tracking-[-0.03em]">{userName}</h1>
                 <div className="flex items-center gap-2">
-                  <span className="h-px w-8 bg-white/20 hidden md:block"></span>
-                  <span className="text-xs font-mono text-primary-glow tracking-widest uppercase">{data.snapshot?.version_label || "V1.0"}</span>
+                  <span className="h-px w-6 bg-white/20 hidden md:block"></span>
+                  <span className="text-[10px] font-mono text-primary-glow tracking-widest uppercase">{data.snapshot?.version_label || "V1.0"}</span>
                 </div>
               </div>
-              <p className="text-slate-400 font-light text-lg mb-8 max-w-xl leading-relaxed">
+              <p className="text-slate-400 font-light text-base mb-6 max-w-xl leading-relaxed">
                 {profile.identity_snapshot?.summary || "No identity summary formed yet."}
               </p>
 
               {/* TAGS */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="px-4 py-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group/stat">
-                  <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-primary transition-colors">Tone</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="px-3 py-2.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Tone</div>
                   <div className="text-white font-normal flex items-center gap-2 text-sm capitalize">
-                    <span className="material-symbols-outlined text-primary text-lg font-light">record_voice_over</span>
+                    <span className="material-symbols-outlined text-primary text-base">record_voice_over</span>
                     {profile.communication_style?.tone || "Standard"}
                   </div>
                 </div>
-                <div className="px-4 py-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group/stat">
-                  <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 group-hover/stat:text-accent-cyan transition-colors">Superpower</div>
-                  <div className="text-white font-normal flex items-center gap-2 text-sm capitalize">
-                    <span className="material-symbols-outlined text-accent-cyan text-lg font-light">strategy</span>
-                    Synthesis
+                <div className="px-3 py-2.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Focus</div>
+                  <div className="text-white font-normal flex items-center gap-2 text-sm">
+                    <span className="material-symbols-outlined text-accent-cyan text-base">center_focus_strong</span>
+                    <span className="truncate">{profile.strategic_direction?.current_focus?.split(" ").slice(0, 3).join(" ") || "Defined"}</span>
                   </div>
                 </div>
-                <div className="px-4 py-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group/stat flex flex-col justify-center">
+                <div className="px-3 py-2.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors flex flex-col justify-center">
                   <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">State</div>
                   <span className="text-[10px] uppercase font-mono tracking-widest bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded w-fit border border-emerald-500/30">Synced</span>
                 </div>
@@ -131,33 +178,28 @@ export default function DashboardPage() {
         {/* MIDDLE ROW (Projects & Pipeline) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* PROJECTS */}
-          <div className="glass-layer rounded-[20px] p-6 flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6 border-b border-white/[0.03] pb-4">
-              <h3 className="text-white text-sm font-medium tracking-wide flex items-center gap-2 uppercase">
-                <span className="material-symbols-outlined text-emerald-400 text-lg">rocket_launch</span>
+          <div className="glass-layer rounded-[20px] p-5 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-5 border-b border-white/[0.03] pb-3">
+              <h3 className="text-white text-xs font-semibold tracking-widest flex items-center gap-2 uppercase">
+                <span className="material-symbols-outlined text-emerald-400 text-base">rocket_launch</span>
                 Active Projects
               </h3>
-              <button className="text-slate-600 hover:text-white transition-colors"><span className="material-symbols-outlined text-lg">more_horiz</span></button>
             </div>
-            <div className="space-y-4 flex-1">
-              {profile.projects?.slice(0, 4).map((p: any, i: number) => {
-                const isWarning = p.status?.toLowerCase().includes("risk") || p.status?.toLowerCase().includes("dormant");
-                const isNeutral = p.status?.toLowerCase().includes("pending");
-                const colorClass = isWarning ? "amber" : isNeutral ? "blue" : "emerald";
-
+            <div className="space-y-3 flex-1">
+              {profile.projects?.slice(0, 5).map((p: any, i: number) => {
+                const c = getStatusColor(p.status);
                 return (
-                  <div key={i} className="group flex items-center justify-between p-3 -mx-3 rounded-lg hover:bg-white/[0.03] transition-all cursor-pointer">
-                    <div className="flex items-center gap-4">
-                      <div className="relative flex items-center justify-center size-8">
-                        <div className={`absolute inset-0 bg-${colorClass}-500/10 rounded-full blur-sm group-hover:bg-${colorClass}-500/20 transition-all`}></div>
-                        <div className={`size-2 rounded-full bg-${colorClass}-400 shadow-[0_0_8px_var(--tw-colors-${colorClass}-400)]`}></div>
+                  <div key={i} className="group flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.03] transition-all cursor-pointer">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative flex items-center justify-center size-6 shrink-0">
+                        <div className={`size-2 rounded-full ${c.dot} ${c.glow}`}></div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">{p.name}</p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5 truncate max-w-[150px]">{p.current_focus}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors truncate">{p.name}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 truncate">{p.current_focus}</p>
                       </div>
                     </div>
-                    <span className={`text-[10px] font-mono uppercase bg-${colorClass}-500/10 text-${colorClass}-400 px-1.5 py-0.5 rounded border border-${colorClass}-500/20`}>{p.status}</span>
+                    <span className={`text-[9px] font-mono uppercase ${c.bg} ${c.text} px-1.5 py-0.5 rounded ${c.border} border shrink-0 ml-2`}>{p.status}</span>
                   </div>
                 );
               })}
@@ -168,32 +210,29 @@ export default function DashboardPage() {
           </div>
 
           {/* PIPELINE INTEL */}
-          <div className="glass-layer rounded-[20px] p-6 flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6 border-b border-white/[0.03] pb-4">
-              <h3 className="text-white text-sm font-medium tracking-wide flex items-center gap-2 uppercase">
-                <span className="material-symbols-outlined text-accent-purple text-lg">filter_alt</span>
+          <div className="glass-layer rounded-[20px] p-5 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-5 border-b border-white/[0.03] pb-3">
+              <h3 className="text-white text-xs font-semibold tracking-widest flex items-center gap-2 uppercase">
+                <span className="material-symbols-outlined text-accent-purple text-base">filter_alt</span>
                 Pipeline Intel
               </h3>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4">
               {profile.leads_pipeline?.slice(0, 4).map((l: any, i: number) => {
-                // Randomize bar width just for cool UI effect based on index
                 const percent = Math.max(20, Math.min(100, 90 - (i * 15)));
-                const color = percent > 60 ? "accent-purple" : "primary";
-
                 return (
-                  <div key={i} className="relative group cursor-pointer hover:bg-white/[0.02] p-2 -mx-2 rounded-lg transition-colors">
-                    <div className="flex justify-between text-xs mb-2 items-end">
-                      <span className="text-slate-200 font-medium">{l.name} <span className="text-slate-500 font-light ml-1">{l.company}</span></span>
+                  <div key={i} className="relative group cursor-pointer hover:bg-white/[0.02] p-2 rounded-lg transition-colors">
+                    <div className="flex justify-between text-xs mb-1.5 items-end">
+                      <span className="text-slate-200 font-medium truncate">{l.name} <span className="text-slate-500 font-light ml-1">{l.company}</span></span>
                     </div>
                     <div className="w-full bg-white/[0.05] rounded-full h-1 relative overflow-hidden">
-                      <div className={`bg-${color} h-1 rounded-full shadow-[0_0_10px_var(--tw-colors-${color})]`} style={{ width: `${percent}%` }}></div>
+                      <div className="bg-accent-purple h-1 rounded-full" style={{ width: `${percent}%` }}></div>
                     </div>
-                    <div className="mt-2 flex">
-                      <span className="text-[10px] uppercase tracking-widest text-slate-500 border border-white/10 px-1.5 py-0.5 rounded bg-white/[0.02] group-hover:text-slate-300 transition-colors">{l.stage}</span>
+                    <div className="mt-1.5 flex">
+                      <span className="text-[9px] uppercase tracking-widest text-slate-500 border border-white/10 px-1.5 py-0.5 rounded bg-white/[0.02]">{l.stage}</span>
                     </div>
                   </div>
-                )
+                );
               })}
               {(!profile.leads_pipeline || profile.leads_pipeline.length === 0) && (
                 <p className="text-slate-500 text-sm font-light text-center py-4">No leads recorded.</p>
@@ -203,21 +242,19 @@ export default function DashboardPage() {
         </div>
 
         {/* KNOWLEDGE MATRIX */}
-        <div className="glass-layer rounded-[20px] p-6 flex flex-col col-span-1 md:col-span-2 relative overflow-hidden">
+        <div className="glass-layer rounded-[20px] p-5 flex flex-col relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-accent-cyan/5 blur-[80px] rounded-full pointer-events-none"></div>
-          <div className="flex items-center justify-between mb-8 z-10 relative">
-            <h3 className="text-white text-sm font-medium tracking-wide flex items-center gap-2">
-              <span className="material-symbols-outlined text-slate-400 text-lg">history_edu</span>
-              RECENT KNOWLEDGE & LEARNINGS
+          <div className="flex items-center justify-between mb-6 z-10 relative">
+            <h3 className="text-white text-xs font-semibold tracking-widest flex items-center gap-2 uppercase">
+              <span className="material-symbols-outlined text-slate-400 text-base">history_edu</span>
+              Recent Knowledge &amp; Learnings
             </h3>
           </div>
-          <div className="relative pl-6 border-l border-white/5 space-y-8 z-10">
+          <div className="relative pl-5 border-l border-white/5 space-y-6 z-10">
             {profile.knowledge_updates?.map((k: any, i: number) => (
               <div key={i} className="relative group">
-                <div className="absolute -left-[29px] top-1 size-3 rounded-full bg-os-bg border border-slate-600 group-hover:border-primary group-hover:shadow-[0_0_10px_rgba(59,130,246,0.4)] group-hover:scale-125 transition-all"></div>
-                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1">
-                  <h4 className="text-slate-200 text-sm font-medium group-hover:text-primary transition-colors">{k.topic}</h4>
-                </div>
+                <div className="absolute -left-[23px] top-1 size-2.5 rounded-full bg-os-bg border border-slate-600 group-hover:border-primary group-hover:shadow-[0_0_10px_rgba(59,130,246,0.4)] transition-all"></div>
+                <h4 className="text-slate-200 text-sm font-medium group-hover:text-primary transition-colors mb-1">{k.topic}</h4>
                 <p className="text-slate-400 text-xs font-light leading-relaxed">{k.summary}</p>
               </div>
             ))}
@@ -228,15 +265,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* RIGHT WIDE COLUMN */}
+      {/* RIGHT COLUMN */}
       <div className="lg:col-span-4 flex flex-col gap-6">
 
         {/* STRATEGIC GAUGE CARD */}
-        <div className="glass-layer rounded-[24px] p-6 h-full flex flex-col gap-8 relative overflow-hidden">
+        <div className="glass-layer rounded-[24px] p-6 flex flex-col gap-6 relative overflow-hidden">
           <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/10 blur-[80px] rounded-full pointer-events-none"></div>
 
           <div className="flex items-center justify-between relative z-10">
-            <h3 className="text-white text-sm font-bold tracking-widest uppercase opacity-90">Strategic State</h3>
+            <h3 className="text-white text-xs font-bold tracking-widest uppercase">Strategic State</h3>
             <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <span className="size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse"></span>
               <span className="text-[10px] text-emerald-400 font-mono uppercase">Fresh</span>
@@ -244,7 +281,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-col items-center justify-center py-2 relative z-10">
-            <div className="relative size-48">
+            <div className="relative size-44">
               <svg className="size-full -rotate-90 transform" viewBox="0 0 100 100">
                 <defs>
                   <linearGradient id="gradientPage" x1="0%" x2="100%" y1="0%" y2="0%">
@@ -254,12 +291,6 @@ export default function DashboardPage() {
                 </defs>
                 <circle cx="50" cy="50" fill="none" opacity="0.3" r="42" stroke="#1e293b" strokeWidth="6"></circle>
                 <circle className="gauge-value" cx="50" cy="50" fill="none" r="42" strokeDasharray="0 263" strokeDashoffset="0" strokeWidth="6" stroke="url(#gradientPage)"></circle>
-                <g className="opacity-20">
-                  <line stroke="white" strokeWidth="1" transform="rotate(0 50 50)" x1="50" x2="50" y1="5" y2="10"></line>
-                  <line stroke="white" strokeWidth="1" transform="rotate(90 50 50)" x1="50" x2="50" y1="5" y2="10"></line>
-                  <line stroke="white" strokeWidth="1" transform="rotate(180 50 50)" x1="50" x2="50" y1="5" y2="10"></line>
-                  <line stroke="white" strokeWidth="1" transform="rotate(270 50 50)" x1="50" x2="50" y1="5" y2="10"></line>
-                </g>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-5xl font-light text-white tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
@@ -270,20 +301,20 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 relative z-10">
-            <div className="p-5 rounded-xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent hover:border-amber-400/30 hover:from-amber-400/[0.05] transition-all group cursor-default">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-amber-400 text-sm drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">stars</span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-amber-200 transition-colors">North Star</span>
+          <div className="flex flex-col gap-3 relative z-10">
+            <div className="p-4 rounded-xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent hover:border-amber-400/30 hover:from-amber-400/[0.05] transition-all group cursor-default">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="material-symbols-outlined text-amber-400 text-sm">stars</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">North Star</span>
               </div>
               <p className="text-slate-200 text-sm font-light leading-relaxed">
                 {profile.strategic_direction?.north_star || "Define long term vision."}
               </p>
             </div>
-            <div className="p-5 rounded-xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent hover:border-primary/30 hover:from-primary/[0.05] transition-all group cursor-default">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-primary text-sm drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">center_focus_strong</span>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest group-hover:text-blue-200 transition-colors">Current Focus</span>
+            <div className="p-4 rounded-xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent hover:border-primary/30 hover:from-primary/[0.05] transition-all group cursor-default">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="material-symbols-outlined text-primary text-sm">center_focus_strong</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Current Focus</span>
               </div>
               <p className="text-slate-200 text-sm font-light leading-relaxed">
                 {profile.strategic_direction?.current_focus || "No immediate focus set."}
@@ -291,47 +322,51 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* RISKS AND SHIFTS INSIDE THE TRAY */}
-          <div className="grid grid-cols-1 gap-4 mt-2 relative z-10">
-            <div className="rounded-xl border border-red-500/20 bg-red-500/[0.02] p-4 hover:bg-red-500/[0.04] transition-colors">
-              <h4 className="text-red-400 text-[10px] font-bold tracking-widest uppercase mb-3 flex items-center gap-2 opacity-80">
-                <span className="material-symbols-outlined text-sm">warning</span>
-                Risks & Unknowns
-              </h4>
-              <ul className="space-y-3">
-                {profile.risks_unknowns?.map((r: any, i: number) => (
-                  <li key={i} className="flex flex-col gap-1">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1.5 size-1 rounded-full bg-red-500 shadow-[0_0_5px_#ef4444] shrink-0"></div>
-                      <span className="text-xs text-slate-300 font-medium leading-normal">{r.risk}</span>
-                    </div>
-                    <span className="text-xs text-slate-500 font-light pl-4 leading-normal mt-0.5">{r.mitigation}</span>
-                  </li>
-                ))}
-                {(!profile.risks_unknowns || profile.risks_unknowns.length === 0) && (
-                  <li className="text-xs text-slate-500 font-light">No critical risks logged.</li>
-                )}
-              </ul>
-            </div>
-
-            {/* COMMS PREFERENCES (Custom add mapping HTML to data) */}
-            <div className="rounded-xl border border-accent-purple/20 bg-accent-purple/[0.02] p-4 hover:bg-accent-purple/[0.04] transition-colors">
-              <h4 className="text-accent-purple text-[10px] font-bold tracking-widest uppercase mb-3 flex items-center gap-2 opacity-80">
-                <span className="material-symbols-outlined text-sm">edit_note</span>
-                Comms & Restrictions
-              </h4>
-              <div className="space-y-2">
-                {profile.communication_style?.preferences_do?.slice(0, 3).map((p: string, i: number) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-slate-400 border-b border-white/5 pb-1">
-                    <span className="text-emerald-500">✓</span> {p}
+          {/* RISKS */}
+          <div className="rounded-xl border border-red-500/20 bg-red-500/[0.02] p-4 relative z-10">
+            <h4 className="text-red-400 text-[10px] font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">warning</span>
+              Risks &amp; Unknowns
+            </h4>
+            <ul className="space-y-2.5">
+              {profile.risks_unknowns?.map((r: any, i: number) => (
+                <li key={i} className="flex flex-col gap-0.5">
+                  <div className="flex items-start gap-2">
+                    <div className="mt-1.5 size-1 rounded-full bg-red-500 shadow-[0_0_5px_#ef4444] shrink-0"></div>
+                    <span className="text-xs text-slate-300 font-medium leading-normal">{r.risk}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-[11px] text-slate-500 font-light pl-3 leading-normal">{r.mitigation}</span>
+                </li>
+              ))}
+              {(!profile.risks_unknowns || profile.risks_unknowns.length === 0) && (
+                <li className="text-xs text-slate-500 font-light">No critical risks logged.</li>
+              )}
+            </ul>
+          </div>
+
+          {/* COMMS */}
+          <div className="rounded-xl border border-accent-purple/20 bg-accent-purple/[0.02] p-4 relative z-10">
+            <h4 className="text-accent-purple text-[10px] font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">edit_note</span>
+              Comms &amp; Restrictions
+            </h4>
+            <div className="space-y-1.5">
+              {profile.communication_style?.preferences_do?.slice(0, 3).map((p: string, i: number) => (
+                <div key={i} className="flex items-start gap-2 text-xs text-slate-400">
+                  <span className="text-emerald-500 shrink-0 mt-0.5">&#10003;</span>
+                  <span className="leading-normal">{p}</span>
+                </div>
+              ))}
+              {profile.communication_style?.avoid?.slice(0, 2).map((p: string, i: number) => (
+                <div key={`a-${i}`} className="flex items-start gap-2 text-xs text-slate-400">
+                  <span className="text-red-400 shrink-0 mt-0.5">&#10007;</span>
+                  <span className="leading-normal">{p}</span>
+                </div>
+              ))}
             </div>
           </div>
 
         </div>
-
       </div>
     </div>
   );
