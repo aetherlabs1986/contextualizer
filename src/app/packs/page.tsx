@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
-import { Copy, Link as LinkIcon, Download, Globe } from "lucide-react";
+import { Copy, Link as LinkIcon, Download, Globe, Check } from "lucide-react";
 
 export default function PacksPage() {
     const { activeProjectId } = useProject();

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { Sidebar } from "@/components/Sidebar";
 import { TopBar } from "@/components/TopBar";
 
-const inter = Inter({ subsets: ["latin"] });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
 export const metadata: Metadata = {
   title: "Contextualizer",
@@ -19,8 +19,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} antialiased bg-background text-foreground`}>
+    <html lang="en" className={`dark ${spaceGrotesk.variable}`}>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+      </head>
+      <body className="antialiased font-sans selection:bg-primary/30 relative">
+        <div className="fixed inset-0 bg-noise opacity-[0.4] pointer-events-none z-50 mix-blend-overlay"></div>
+        <div className="light-leak top-[-20%] left-[-10%] opacity-60 bg-[radial-gradient(circle,rgba(59,130,246,0.08)_0%,transparent_70%)]"></div>
+        <div className="light-leak bottom-[-20%] right-[-10%] bg-[radial-gradient(circle,rgba(139,92,246,0.06)_0%,transparent_70%)]"></div>
+
         <LanguageProvider>
           <ProjectProvider>
             <div className="flex h-screen w-full overflow-hidden">
