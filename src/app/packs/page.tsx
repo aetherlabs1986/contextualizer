@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
-import { Copy, Link as LinkIcon, Download, Globe, Check } from "lucide-react";
+import { Copy, Globe, Check } from "lucide-react";
 
 export default function PacksPage() {
     const { activeProjectId } = useProject();
@@ -18,7 +18,7 @@ export default function PacksPage() {
             .then(data => {
                 setSnapshot(data.snapshot);
                 if (data.snapshot?.profile_json) {
-                    try { setProfile(JSON.parse(data.snapshot.profile_json)); } catch (e) { }
+                    try { setProfile(JSON.parse(data.snapshot.profile_json)); } catch { }
                 }
             });
     }, [activeProjectId]);

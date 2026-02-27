@@ -1,7 +1,7 @@
 import { prisma } from "./db";
 
 const DEFAULT_PROMPTS: Record<string, string> = {
-    INSIGHT_EXTRACT_V1: `
+  INSIGHT_EXTRACT_V1: `
 Extract structured insights from the following text block.
 You MUST output valid JSON only, matching this exact schema:
 
@@ -98,7 +98,7 @@ Type: {{source_type}}
 
 {{extracted_text}}
 `,
-    PROFILE_MERGE_V1: `
+  PROFILE_MERGE_V1: `
 You are updating a strategic Profile incrementally.
 Inputs:
 - Previous Profile JSON
@@ -143,7 +143,7 @@ PREVIOUS PROFILE:
 NEW INSIGHTS:
 {{new_insights}}
 `,
-    RERANK_CHUNKS_V1: `
+  RERANK_CHUNKS_V1: `
 Given the user question, select up to 5 chunks that best answer it.
 
 Output JSON ONLY:
@@ -163,7 +163,7 @@ Question: {{user_question}}
 Candidate Chunks:
 {{candidate_chunks}}
 `,
-    ANSWER_WITH_CITATIONS_V1: `
+  ANSWER_WITH_CITATIONS_V1: `
 System: you are a strategic assistant.
 
 Context: retrieved chunks + profile
@@ -185,23 +185,23 @@ User Question: {{user_question}}
 `
 };
 
-export async function getPromptTemplate(templateName: string, userId: string = "default-user"): Promise<string> {
-    const custom = await prisma.prompts.findUnique({
-        where: { template_name: templateName }
-    });
+export async function getPromptTemplate(templateName: string, _userId: string = "default-user"): Promise<string> {
+  const custom = await prisma.prompts.findUnique({
+    where: { template_name: templateName }
+  });
 
-    if (custom && custom.prompt_text) {
-        return custom.prompt_text;
-    }
+  if (custom && custom.prompt_text) {
+    return custom.prompt_text;
+  }
 
-    return DEFAULT_PROMPTS[templateName] || "";
+  return DEFAULT_PROMPTS[templateName] || "";
 }
 
 export function fillPrompt(template: string, vars: Record<string, string>): string {
-    let filled = template;
-    for (const [key, value] of Object.entries(vars)) {
-        const regex = new RegExp(`{{${key}}}`, "g");
-        filled = filled.replace(regex, value);
-    }
-    return filled;
+  let filled = template;
+  for (const [key, value] of Object.entries(vars)) {
+    const regex = new RegExp(`{{${key}}}`, "g");
+    filled = filled.replace(regex, value);
+  }
+  return filled;
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
-import { Check, ChevronRight, File, Upload, Settings2 } from "lucide-react";
+import { ChevronRight, File, Upload, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function DocumentImportWizard() {

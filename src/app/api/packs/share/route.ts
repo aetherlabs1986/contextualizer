@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
         // In V1, we simulate context_pack entry by using snapshot ID to build it on the fly, 
         // or just creating a shareable Link directly relying on snapshot ID
-        const link = await prisma.shared_links.create({
+        await prisma.shared_links.create({
             data: {
                 token,
                 context_pack_id: data.context_pack_id, // snapshot id really

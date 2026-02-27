@@ -1,0 +1,8 @@
+﻿
+./src/app/page.tsx
+37:6  Warning: React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/sources/page.tsx
+27:8  Warning: React Hook useEffect has a missing dependency: 'fetchSources'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

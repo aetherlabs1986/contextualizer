@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Check, Copy } from "lucide-react";
 
 export default function SharedPackPage({ params }: { params: { token: string } }) {
@@ -12,7 +12,7 @@ export default function SharedPackPage({ params }: { params: { token: string } }
         fetch(`/api/packs/share/${token}`)
             .then(res => res.json())
             .then(res => setData(res))
-            .catch(e => setData({ text: "", error: "Failed to load pack" }));
+            .catch(() => setData({ text: "", error: "Failed to load pack" }));
     }, [token]);
 
     const handleCopy = () => {

@@ -36,7 +36,7 @@ export async function getDashboardData(projectId: string | null) {
             const parsed = JSON.parse(lastProfile.profile_json);
             profileSummary = parsed?.identity_snapshot?.summary || profileSummary;
             identityRoles = parsed?.identity_snapshot?.roles || [];
-        } catch (e) { }
+        } catch { }
     }
 
     const topProjects = projectId ? [] : await prisma.projects.findMany({

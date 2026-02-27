@@ -21,7 +21,7 @@ export default function DashboardPage() {
     const json = await res.json();
     setData(json);
     if (json.snapshot?.profile_json) {
-      try { setProfile(JSON.parse(json.snapshot.profile_json)); } catch (e) { }
+      try { setProfile(JSON.parse(json.snapshot.profile_json)); } catch { }
     } else {
       setProfile(null);
     }

@@ -32,7 +32,8 @@
   }
 
   body {
-    @apply bg-os-bg text-slate-300 font-sans tracking-tight;
+    @apply text-slate-300 font-sans tracking-tight;
+    background-color: #0a0b0d;
   }
 }
 

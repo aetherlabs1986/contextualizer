@@ -13,7 +13,7 @@ type ChatMessage = {
 
 export function TextImportWizard() {
     const router = useRouter();
-    const { activeProjectId, projects } = useProject();
+    const { activeProjectId } = useProject();
 
     const [messages, setMessages] = useState<ChatMessage[]>([
         {

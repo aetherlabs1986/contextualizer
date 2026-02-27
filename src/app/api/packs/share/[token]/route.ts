@@ -17,7 +17,7 @@ export async function GET(req: Request, { params }: { params: { token: string } 
         if (!snapshot) return NextResponse.json({ error: "Contexto no encontrado" }, { status: 404 });
 
         let profile: any;
-        try { profile = JSON.parse(snapshot.profile_json); } catch (e) { }
+        try { profile = JSON.parse(snapshot.profile_json); } catch { }
 
         // Fetch RAW sources
         const sources = await prisma.sources.findMany({

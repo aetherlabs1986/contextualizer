@@ -1,0 +1,67 @@
+﻿node.exe : 
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Us
+ers\Usuario\AppData\Roamin 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+./src/app/api/extract/route.t
+s
+20:13  Error: Definition for 
+rule '@typescript-eslint/no-r
+equire-imports' was not 
+found.  @typescript-eslint/no
+-require-imports
+
+./src/app/api/packs/share/[to
+ken]/route.ts
+19:9  Error: Definition for 
+rule '@typescript-eslint/no-e
+xplicit-any' was not found.  
+@typescript-eslint/no-explici
+t-any
+41:17  Error: Definition for 
+rule '@typescript-eslint/no-e
+xplicit-any' was not found.  
+@typescript-eslint/no-explici
+t-any
+
+./src/app/layout.tsx
+24:9  Warning: Custom fonts 
+not added in 
+`pages/_document.js` will 
+only load for a single page. 
+This is discouraged. See: htt
+ps://nextjs.org/docs/messages
+/no-page-custom-font  @next/n
+ext/no-page-custom-font
+
+./src/app/page.tsx
+37:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 'fetchData'. 
+Either include it or remove 
+the dependency array.  
+react-hooks/exhaustive-deps
+
+./src/app/sources/page.tsx
+27:8  Warning: React Hook 
+useEffect has a missing 
+dependency: 'fetchSources'. 
+Either include it or remove 
+the dependency array.  
+react-hooks/exhaustive-deps
+
+info  - Need to disable some 
+ESLint rules? Learn more 
+here: https://nextjs.org/docs
+/basic-features/eslint#disabl
+ing-rules
