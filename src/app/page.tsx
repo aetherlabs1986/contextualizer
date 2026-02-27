@@ -3,17 +3,19 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUserProfile } from "@/contexts/UserProfileContext";
 import { getDashboardData } from "./actions";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const { activeProjectId } = useProject();
   const { t } = useLanguage();
+  const { userProfile, updateProfile } = useUserProfile();
 
   const [data, setData] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [dashboardMeta, setDashboardMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
@@ -37,28 +39,20 @@ export default function DashboardPage() {
     fetchData();
   }, [fetchData]);
 
-  // Load saved avatar from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("contextualizer_avatar");
-    if (saved) setAvatarUrl(saved);
-  }, []);
-
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
-      setAvatarUrl(result);
-      localStorage.setItem("contextualizer_avatar", result);
+      updateProfile({ avatarUrl: result });
     };
     reader.readAsDataURL(file);
   };
 
-  // Extract user name from profile
-  const userName = profile?.identity_snapshot?.roles?.[0]
-    || profile?.identity_snapshot?.summary?.split(" ").slice(0, 2).join(" ")
-    || "Mi Perfil";
+  // Name comes from settings, fallback to profile
+  const displayName = userProfile.name || "Mi Perfil";
+  const displayTitle = userProfile.title || profile?.identity_snapshot?.roles?.[0] || "";
 
   const getStatusColor = (status: string) => {
     const s = (status || "").toLowerCase();
@@ -117,8 +111,8 @@ export default function DashboardPage() {
               />
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/30 to-accent-cyan/30 blur-2xl animate-pulse"></div>
               <div className="size-full rounded-full relative overflow-hidden border-2 border-white/20 backdrop-blur-sm">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="size-full object-cover" />
+                {userProfile.avatarUrl ? (
+                  <img src={userProfile.avatarUrl} alt="Avatar" className="size-full object-cover" />
                 ) : (
                   <>
                     <div className="orb-glow size-full absolute inset-0"></div>
@@ -140,9 +134,14 @@ export default function DashboardPage() {
             {/* BIO */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-col md:flex-row md:items-baseline gap-3 mb-2 justify-center md:justify-start">
-                <h1 className="text-3xl md:text-4xl font-light text-white tracking-[-0.03em]">{userName}</h1>
+                <h1 className="text-3xl md:text-4xl font-light text-white tracking-[-0.03em]">{displayName}</h1>
+                {displayTitle && (
+                  <div className="flex items-center gap-2">
+                    <span className="h-px w-6 bg-white/20 hidden md:block"></span>
+                    <span className="text-xs text-slate-400 font-light">{displayTitle}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
-                  <span className="h-px w-6 bg-white/20 hidden md:block"></span>
                   <span className="text-[10px] font-mono text-primary-glow tracking-widest uppercase">{data.snapshot?.version_label || "V1.0"}</span>
                 </div>
               </div>
