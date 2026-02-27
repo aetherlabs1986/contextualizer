@@ -1,0 +1,130 @@
+﻿  Ôû▓ Next.js 14.2.14
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/sources/page.tsx
+27:8  Warning: React Hook useEffect has a missing dependency: 'fetchSources'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/17) ...
+node.exe : B [Error]: 
+Dynamic server usage: Route 
+/api/profile couldn't be 
+rendered statically because 
+it used `request.url`. See 
+more info here: https://nextj
+s.org/docs/messages/dynamic-s
+erver-error
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Us
+ers\Usuario\AppData\Roamin 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (B [Erro  
+  r]: Dyna...ic-server-err   
+ or:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+    at V (C:\Users\Usuario\De
+sktop\Dev\Contextualizer\node
+_modules\next\dist\compiled\n
+ext-server\app-route.runtime.
+prod.js:6:21777)
+    at Object.get (C:\Users\U
+suario\Desktop\Dev\Contextual
+izer\node_modules\next\dist\c
+ompiled\next-server\app-route
+.runtime.prod.js:6:29137)
+    at u (C:\Users\Usuario\De
+sktop\Dev\Contextualizer\.nex
+t\server\app\api\profile\rout
+e.js:1:602)
+    at C:\Users\Usuario\Deskt
+op\Dev\Contextualizer\node_mo
+dules\next\dist\compiled\next
+-server\app-route.runtime.pro
+d.js:6:36963
+    at C:\Users\Usuario\Deskt
+op\Dev\Contextualizer\node_mo
+dules\next\dist\server\lib\tr
+ace\tracer.js:140:36
+    at 
+NoopContextManager.with (C:\U
+sers\Usuario\Desktop\Dev\Cont
+extualizer\node_modules\next\
+dist\compiled\@opentelemetry\
+api\index.js:1:7062)
+    at ContextAPI.with (C:\Us
+ers\Usuario\Desktop\Dev\Conte
+xtualizer\node_modules\next\d
+ist\compiled\@opentelemetry\a
+pi\index.js:1:518)
+    at 
+NoopTracer.startActiveSpan (C
+:\Users\Usuario\Desktop\Dev\C
+ontextualizer\node_modules\ne
+xt\dist\compiled\@opentelemet
+ry\api\index.js:1:18093)
+    at 
+ProxyTracer.startActiveSpan (
+C:\Users\Usuario\Desktop\Dev\
+Contextualizer\node_modules\n
+ext\dist\compiled\@openteleme
+try\api\index.js:1:18854)
+    at C:\Users\Usuario\Deskt
+op\Dev\Contextualizer\node_mo
+dules\next\dist\server\lib\tr
+ace\tracer.js:122:103 {
+  description: "Route 
+/api/profile couldn't be 
+rendered statically because 
+it used `request.url`. See 
+more info here: https://nextj
+s.org/docs/messages/dynamic-s
+erver-error",
+  digest: 
+'DYNAMIC_SERVER_USAGE'
+}
+   Generating static pages (4/17) 
+   Generating static pages (8/17) 
+   Generating static pages (12/17) 
+ Ô£ô Generating static pages (17/17)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Ôöî Ôùï /                                    5.64 kB        99.6 kB
+Ôö£ Ôùï /_not-found                          873 B            88 kB
+Ôö£ ãÆ /api/chat                            0 B                0 B
+Ôö£ ãÆ /api/extract                         0 B                0 B
+Ôö£ ãÆ /api/packs/share                     0 B                0 B
+Ôö£ ãÆ /api/packs/share/[token]             0 B                0 B
+Ôö£ ãÆ /api/profile                         0 B                0 B
+Ôö£ ãÆ /api/profile/rollback                0 B                0 B
+Ôö£ Ôùï /api/projects                        0 B                0 B
+Ôö£ ãÆ /api/sources                         0 B                0 B
+Ôö£ Ôùï /chat                                36.9 kB         124 kB
+Ôö£ Ôùï /packs                               3.27 kB        90.4 kB
+Ôö£ Ôùï /settings                            2.25 kB        89.4 kB
+Ôö£ ãÆ /share/[token]                       1.83 kB          89 kB
+Ôö£ Ôùï /sources                             6.13 kB         100 kB
+Ôöö Ôùï /sources/add                         8.26 kB        95.4 kB
++ First Load JS shared by all            87.1 kB
+  Ôö£ chunks/117-0607f9c6628830e6.js       31.6 kB
+  Ôö£ chunks/fd9d1056-9e6edfc1ad588c8f.js  53.6 kB
+  Ôöö other shared chunks (total)          1.9 kB
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+
