@@ -9,53 +9,62 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0a0b0d", // os-bg
-        foreground: "#cbd5e1", // slate-300
-        border: "rgba(255, 255, 255, 0.08)",
-        input: "rgba(19, 21, 26, 0.6)",
-        ring: "#3b82f6",
-        panel: "#13151a", // os-surface
+        background: "#f8f9fc",
+        foreground: "#1e293b",
+        border: "#e2e8f0",
+        input: "#ffffff",
+        ring: "#2563eb",
+        panel: "#ffffff",
 
-        "os-bg": "#0a0b0d",
-        "os-surface": "#13151a",
+        "os-bg": "#f8f9fc",
+        "os-surface": "#ffffff",
+        "text-main": "#1e293b",
+        "text-secondary": "#64748b",
+        "soft-border": "#e2e8f0",
+
         primary: {
-          DEFAULT: "#3b82f6",
+          DEFAULT: "#2563eb",
+          soft: "#eff6ff",
           glow: "#60a5fa",
           foreground: "#ffffff",
         },
         "accent-purple": "#8b5cf6",
-        "accent-cyan": "#22d3ee",
-        "glass-border": "rgba(255, 255, 255, 0.08)",
-        "glass-border-glow": "rgba(255, 255, 255, 0.15)",
+        "accent-purple-soft": "#f5f3ff",
+        "accent-cyan": "#06b6d4",
+        "accent-cyan-soft": "#ecfeff",
+
+        "glass-border": "#e2e8f0",
+        "glass-border-glow": "#cbd5e1",
 
         secondary: {
-          DEFAULT: "rgba(255, 255, 255, 0.05)",
-          foreground: "#ffffff",
+          DEFAULT: "#f1f5f9",
+          foreground: "#1e293b",
         },
         muted: {
-          DEFAULT: "rgba(255, 255, 255, 0.03)",
-          foreground: "#94a3b8", // slate-400
+          DEFAULT: "#f8fafc",
+          foreground: "#64748b",
         },
         accent: {
-          DEFAULT: "#3b82f6",
+          DEFAULT: "#2563eb",
           foreground: "#ffffff",
         },
         card: {
-          DEFAULT: "rgba(19, 21, 26, 0.6)",
-          foreground: "#ffffff",
+          DEFAULT: "#ffffff",
+          foreground: "#1e293b",
         },
       },
       fontFamily: {
-        "display": ["Space Grotesk", "sans-serif"],
-        "sans": ["Space Grotesk", "sans-serif"],
+        display: ["Inter", "sans-serif"],
+        sans: ["Inter", "sans-serif"],
       },
       boxShadow: {
-        'neon': '0 0 10px rgba(59, 130, 246, 0.5)',
-        'inner-light': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
-        'glass-depth': '0 20px 40px -10px rgba(0,0,0,0.5)',
-      },
-      backgroundImage: {
-        'noise': "url('data:image/svg+xml,%3Csvg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noiseFilter\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.65\" numOctaves=\"3\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noiseFilter)\" opacity=\"0.05\"/%3E%3C/svg%3E')",
+        neon: "0 0 10px rgba(37, 99, 235, 0.2)",
+        "inner-light": "inset 0 1px 0 0 rgba(255, 255, 255, 0.8)",
+        "glass-depth": "0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02)",
+        "soft-xl": "0 20px 40px -10px rgba(0,0,0,0.05)",
+        "soft-2xl": "0 25px 50px -12px rgba(148, 163, 184, 0.15)",
+        "card-hover": "0 20px 40px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.01)",
+        float: "0 10px 30px -5px rgba(37, 99, 235, 0.15)",
       },
       borderRadius: {
         lg: "24px",

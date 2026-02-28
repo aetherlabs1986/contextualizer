@@ -13,6 +13,7 @@ export interface UserProfile {
     twitter: string;
     website: string;
     avatarUrl: string;
+    slug: string;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -26,6 +27,7 @@ const DEFAULT_PROFILE: UserProfile = {
     twitter: "",
     website: "",
     avatarUrl: "",
+    slug: "",
 };
 
 const STORAGE_KEY = "contextualizer_user_profile";
