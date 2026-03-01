@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useProject } from "@/contexts/ProjectContext";
-import { Send, Bot, User, Bookmark, Menu, Plus, MessageSquare } from "lucide-react";
+import { Send, Bot, User, Bookmark, Menu, Plus, MessageSquare, Mic, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Message = {
@@ -27,6 +27,77 @@ export default function ChatPage() {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isListening, setIsListening] = useState(false);
+    const [attachingDoc, setAttachingDoc] = useState(false);
+
+    // Dictation mechanism
+    const handleDictate = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Tu navegador no soporta dictado por voz.');
+            return;
+        }
+
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.lang = 'es-ES';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            setIsListening(true);
+        };
+
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setInput(prev => prev + (prev ? ' ' : '') + transcript);
+        };
+
+        recognition.onerror = () => {
+            setIsListening(false);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        if (isListening) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    };
+
+    // Document Extractor mechanism for chat
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selected = e.target.files?.[0];
+        if (!selected) return;
+
+        setAttachingDoc(true);
+        const formData = new FormData();
+        formData.append("file", selected);
+
+        try {
+            const res = await fetch("/api/extract", {
+                method: "POST",
+                body: formData,
+            });
+            const data = await res.json();
+            if (res.ok && data.extractedText) {
+                // Format appropriately to give LLM context
+                const snippet = `[Documento Adjunto: ${selected.name}]\n"""\n${data.extractedText}\n"""\n\n`;
+                setInput(prev => snippet + prev);
+            } else {
+                alert("Fallo al extraer texto del documento.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error de red al intentar adjuntar el documento.");
+        } finally {
+            setAttachingDoc(false);
+            e.target.value = ""; // Reset input
+        }
+    };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -294,10 +365,27 @@ export default function ChatPage() {
 
                 {/* Input Area */}
                 <div className="absolute bottom-0 left-0 right-0 max-w-3xl mx-auto w-full px-4 pb-4">
-                    <div className="relative flex items-end">
+                    <div className="relative flex items-end bg-white shadow-[0_0_20px_-5px_rgba(0,0,0,0.1)] border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                        <div className="flex flex-col gap-1 px-3 pb-3 justify-end shrink-0">
+                            <label className="p-2 text-slate-400 hover:text-primary hover:bg-slate-100 rounded-xl transition-colors cursor-pointer" title="Adjuntar documento">
+                                {attachingDoc ? (
+                                    <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin block" />
+                                ) : (
+                                    <Paperclip className="w-5 h-5" />
+                                )}
+                                <input type="file" className="hidden" accept=".pdf,.docx,.txt,.md" onChange={handleFileUpload} />
+                            </label>
+                            <button
+                                onClick={handleDictate}
+                                title="Dictado por voz"
+                                className={`p-2 rounded-xl transition-colors ${isListening ? 'bg-red-100 text-red-500 animate-pulse' : 'text-slate-400 hover:text-primary hover:bg-slate-100'}`}
+                            >
+                                <Mic className="w-5 h-5" />
+                            </button>
+                        </div>
                         <textarea
                             ref={textareaRef}
-                            className="w-full bg-white shadow-[0_0_20px_-5px_rgba(0,0,0,0.1)] border border-slate-200 rounded-2xl pl-5 pr-14 py-4 text-[15px] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none overflow-hidden max-h-[200px]"
+                            className="w-full bg-transparent pl-2 pr-14 py-4 text-[15px] focus:outline-none resize-none overflow-hidden max-h-[200px]"
                             placeholder="Mándale un mensaje a tu Cerebro Contextual..."
                             value={input}
                             rows={1}
