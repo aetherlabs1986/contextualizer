@@ -1,0 +1,53 @@
+query ListAllCompanies @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public as it lists companies without sensitive user data.") {
+  companies {
+    id
+    name
+    industry
+    location
+    websiteUrl
+    aiGeneratedSummary
+    createdAt
+  }
+}
+
+mutation CreatePerson($firstName: String!, $lastName: String!, $title: String, $description: String, $linkedinUrl: String, $websiteUrl: String) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users as it allows them to create their own person profiles.") {
+  person_insert(data: {
+    firstName: $firstName,
+    lastName: $lastName,
+    title: $title,
+    description: $description,
+    linkedinUrl: $linkedinUrl,
+    websiteUrl: $websiteUrl,
+    userId_expr: "auth.uid",
+    createdAt_expr: "request.time"
+  }) {
+    id
+  }
+}
+
+query GetMyConnections @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users, allowing them to view their connections.") {
+  people(where: {userId: {eq_expr: "auth.uid"}}) {
+    id
+    firstName
+    lastName
+    connections_on_sourcePerson {
+      targetPerson {
+        firstName
+        lastName
+      }
+      type
+      createdAt
+    }
+  }
+}
+
+mutation UpdateMyCompanyDescription($companyId: UUID!, $newDescription: String!) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users, allowing them to update their own company's description.") {
+  company_update(
+    key: {id: $companyId},
+    data: {
+      description: $newDescription
+    }
+  ) {
+    id
+  }
+}

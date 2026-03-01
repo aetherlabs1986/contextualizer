@@ -1,0 +1,4 @@
+﻿origin	https://aetherlabs1986@github.com/aetherlabs1986/contextualizer.git (fetch)
+origin	https://aetherlabs1986@github.com/aetherlabs1986/contextualizer.git (push)
+vercel	https://victortorresa94-del@github.com/victortorresa94-del/contextualizer.git (fetch)
+vercel	https://victortorresa94-del@github.com/victortorresa94-del/contextualizer.git (push)

@@ -11,6 +11,10 @@ model users {
   id         String   @id @default(uuid())
   email      String   @unique
   created_at DateTime @default(now())
+  first_name String?
+  last_name  String?
+  birth_date DateTime?
+  slug       String?  @unique
 
   projects          projects[]
   sources           sources[]
@@ -20,8 +24,9 @@ model users {
   profile_snapshots profile_snapshots[]
   context_packs     context_packs[]
   chat_threads      chat_threads[]
-  settings          settings?
-  prompts           prompts[]
+  settings              settings?
+  prompts               prompts[]
+  professional_profiles professional_profiles[]
 }
 
 model projects {
@@ -166,6 +171,7 @@ model chat_threads {
   title      String
   project_id String?
   created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   user          users           @relation(fields: [user_id], references: [id])
   project       projects?       @relation(fields: [project_id], references: [id], onDelete: SetNull)
@@ -204,4 +210,18 @@ model settings {
   updated_at        DateTime @updatedAt
   
   user users @relation(fields: [user_id], references: [id])
+}
+
+model professional_profiles {
+  id               String   @id @default(uuid())
+  user_id          String   @unique
+  headline         String?   
+  about            String?
+  work_experiences String?  // JSON string: [{ company, role, startDate, endDate, description, achievements }]
+  education        String?  // JSON string: [{ institution, degree, startDate, endDate }]
+  skills           String?  // JSON string: ["React", "AI", "Product Management"]
+  projects         String?  // JSON string: [{ name, description, url_or_proof }]
+  updated_at       DateTime @updatedAt
+
+  user             users    @relation(fields: [user_id], references: [id])
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useProject } from "@/contexts/ProjectContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Send, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -14,6 +15,7 @@ type ChatMessage = {
 export function TextImportWizard() {
     const router = useRouter();
     const { activeProjectId } = useProject();
+    const { user } = useAuth();
 
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
@@ -71,6 +73,7 @@ export function TextImportWizard() {
                     importance: "normal",
                     extracted_text: userContext,
                     raw_text: userContext,
+                    user_id: user?.uid
                 })
             });
 
@@ -89,32 +92,35 @@ export function TextImportWizard() {
     };
 
     return (
-        <div className="flex flex-col h-[500px]">
+        <div className="flex flex-col flex-1 min-h-[500px]">
             {/* Header info */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-xl font-semibold flex items-center gap-2"><Sparkles className="w-5 h-5 text-accent" /> Añadir Conocimiento Directo</h2>
-                    <p className="text-sm text-muted-foreground">Escribe directamente lo que necesites que recuerde de forma conversacional.</p>
+                    <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+                        <span className="material-symbols-outlined text-primary">auto_awesome</span>
+                        Añadir Conocimiento Directo
+                    </h2>
+                    <p className="text-sm text-slate-500">Escribe directamente lo que necesites que recuerde de forma conversacional.</p>
                 </div>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 bg-input/50 rounded-xl border border-border overflow-y-auto p-4 space-y-4 mb-4">
+            <div className="flex-1 bg-background-light/50 dark:bg-background-dark/50 rounded-xl border border-border-light dark:border-border-dark overflow-y-auto p-4 space-y-4 mb-4 shadow-inner min-h-[300px]">
                 {messages.map((m, i) => (
-                    <div key={i} className={clsx("flex w-full", m.role === "user" ? "justify-end" : "justify-start")}>
-                        <div className={clsx("max-w-[80%] rounded-2xl px-4 py-2 text-sm",
-                            m.role === "user"
-                                ? "bg-primary text-primary-foreground rounded-tr-sm"
-                                : "bg-card border border-border text-foreground tracking-wide rounded-tl-sm")}>
+                    <div key={i} className={`flex w-full ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm ${m.role === "user"
+                                ? "bg-primary text-white rounded-tr-sm"
+                                : "bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-800 dark:text-slate-200 tracking-wide rounded-tl-sm"
+                            }`}>
                             {m.content}
                         </div>
                     </div>
                 ))}
 
                 {saved && (
-                    <div className="flex w-full justify-center">
-                        <div className="flex items-center gap-2 bg-green-500/20 text-green-400 border border-green-500/30 px-4 py-2 rounded-full text-sm mt-4">
-                            <CheckCircle2 className="w-4 h-4" />
+                    <div className="flex w-full justify-center animate-in fade-in zoom-in duration-300">
+                        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 border border-emerald-200 px-4 py-2 rounded-full text-sm mt-4 font-medium shadow-sm">
+                            <span className="material-symbols-outlined text-[18px]">check_circle</span>
                             ¡Contexto integrado con éxito a tu motor!
                         </div>
                     </div>
@@ -127,31 +133,34 @@ export function TextImportWizard() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
                     placeholder="Ej: 'El cliente XYZ prefiere reuniones por las mañanas...'"
-                    className="flex-1 input-field"
+                    className="flex-1 h-12 px-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm shadow-sm disabled:opacity-50"
                     disabled={isSaving || saved}
                 />
                 <button
                     onClick={handleSend}
                     disabled={!input.trim() || isSaving || saved}
-                    className="w-10 h-10 shrink-0 bg-primary text-primary-foreground rounded-md flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    className="w-12 h-12 shrink-0 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-blue-400 transition-colors disabled:opacity-50 shadow-sm shadow-primary/20"
                 >
-                    <Send className="w-4 h-4" />
+                    <span className="material-symbols-outlined">send</span>
                 </button>
             </div>
 
-            <div className="mt-4 flex justify-between items-center">
-                <p className="text-xs text-muted-foreground w-2/3">
-                    Nota: Los mensajes que envíes aquí se integrarán y analizarán automáticamente como una nueva fuente de conocimiento para el perfil activo.
+            <div className="mt-6 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                <p className="text-xs text-slate-500 w-2/3 leading-relaxed">
+                    <strong className="text-slate-700 dark:text-slate-300">Nota:</strong> Los mensajes que envíes aquí se integrarán y analizarán automáticamente como una nueva fuente de conocimiento para el perfil activo.
                 </p>
                 <button
                     onClick={handleSaveContext}
                     disabled={messages.length === 1 || isSaving || saved}
-                    className="btn-primary"
+                    className="h-10 px-6 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                 >
                     {isSaving ? (
-                        <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</span>
+                        <>
+                            <span className="material-symbols-outlined animate-spin">sync</span>
+                            Guardando...
+                        </>
                     ) : "Concluir y Guardar"}
                 </button>
             </div>

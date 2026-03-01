@@ -34,8 +34,8 @@ export async function getDashboardData(projectId: string | null) {
     if (lastProfile) {
         try {
             const parsed = JSON.parse(lastProfile.profile_json);
-            profileSummary = parsed?.identity_snapshot?.summary || profileSummary;
-            identityRoles = parsed?.identity_snapshot?.roles || [];
+            profileSummary = parsed?.identity?.summary || profileSummary;
+            identityRoles = parsed?.identity?.operating_principles || [];
         } catch { }
     }
 

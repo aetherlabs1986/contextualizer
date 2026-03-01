@@ -1,0 +1,45 @@
+type User @table {
+  displayName: String!
+  email: String!
+  createdAt: Timestamp!
+  photoUrl: String
+}
+
+type Person @table {
+  user: User
+  firstName: String!
+  lastName: String!
+  createdAt: Timestamp!
+  title: String
+  description: String
+  linkedinUrl: String
+  websiteUrl: String
+  aiGeneratedSummary: String
+}
+
+type Company @table {
+  user: User
+  name: String!
+  industry: String!
+  createdAt: Timestamp!
+  websiteUrl: String
+  location: String
+  description: String
+  aiGeneratedSummary: String
+}
+
+type Employment @table(key: ["person", "company"]) {
+  person: Person!
+  company: Company!
+  startDate: Date!
+  endDate: Date
+  currentJob: Boolean
+}
+
+type Connection @table(key: ["sourcePerson", "targetPerson"]) {
+  sourcePerson: Person!
+  targetPerson: Person!
+  type: String!
+  createdAt: Timestamp!
+  description: String
+}

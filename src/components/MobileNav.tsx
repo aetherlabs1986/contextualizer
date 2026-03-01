@@ -11,9 +11,10 @@ export function MobileNav() {
 
     const navItems = [
         { name: t("nav.dashboard"), href: "/", icon: "space_dashboard" },
+        { name: t("nav.chat"), href: "/chat", icon: "chat_bubble" },
         { name: t("nav.sources"), href: "/sources", icon: "folder_open" },
         { name: t("nav.packs"), href: "/packs", icon: "deployed_code" },
-        { name: t("nav.chat"), href: "/chat", icon: "chat_bubble" },
+        { name: "CV", href: "/cv", icon: "badge" },
         { name: t("nav.settings"), href: "/settings", icon: "settings" },
     ];
 

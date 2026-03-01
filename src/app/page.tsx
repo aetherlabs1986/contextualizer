@@ -17,7 +17,10 @@ export default function DashboardPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/profile${activeProjectId ? `?projectId=${activeProjectId}` : ""}`);
+      const { auth } = await import("@/lib/firebase");
+      const uid = auth.currentUser?.uid || "1";
+
+      const res = await fetch(`/api/profile?user_id=${uid}${activeProjectId ? `&projectId=${activeProjectId}` : ""}`);
       const json = await res.json();
       setData(json);
       if (json.snapshot?.profile_json) {
@@ -47,7 +50,7 @@ export default function DashboardPage() {
 
   const getStatusColor = (status: string) => {
     const s = (status || "").toLowerCase();
-    if (s.includes("risk") || s.includes("dormant") || s.includes("critical") || s.includes("attention"))
+    if (s.includes("blocked") || s.includes("dormant") || s.includes("friction"))
       return { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400", border: "border-amber-100" };
     if (s.includes("pending") || s.includes("idea"))
       return { bg: "bg-blue-50", text: "text-blue-600", dot: "bg-blue-400", border: "border-blue-100" };
@@ -150,19 +153,13 @@ export default function DashboardPage() {
                 {profile?.communication_style?.tone && (
                   <div className="px-3 sm:px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-sm font-medium text-text-main hover:bg-white hover:shadow-sm transition-all cursor-default">
                     <span className="material-symbols-outlined text-purple-500 text-lg">psychology</span>
-                    <span className="capitalize">{profile.communication_style.tone}</span>
+                    <span className="capitalize">{profile.communication_style.tone.split(",")[0]}</span>
                   </div>
                 )}
                 {profile?.projects?.length > 0 && (
                   <div className="px-3 sm:px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-sm font-medium text-text-main hover:bg-white hover:shadow-sm transition-all cursor-default">
                     <span className="material-symbols-outlined text-emerald-500 text-lg">rocket_launch</span>
                     {profile.projects.length} proyecto{profile.projects.length !== 1 ? "s" : ""}
-                  </div>
-                )}
-                {profile?.leads_pipeline?.length > 0 && (
-                  <div className="px-3 sm:px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-sm font-medium text-text-main hover:bg-white hover:shadow-sm transition-all cursor-default">
-                    <span className="material-symbols-outlined text-cyan-500 text-lg">group</span>
-                    {profile.leads_pipeline.length} lead{profile.leads_pipeline.length !== 1 ? "s" : ""}
                   </div>
                 )}
                 <div className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center gap-1.5 text-xs">
@@ -174,14 +171,30 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* SKILLS & STRENGTHS */}
-        {(profile?.identity_snapshot?.strengths?.length > 0 || profile?.identity_snapshot?.tools?.length > 0) && (
+        {/* PRINCIPLES & STRENGTHS */}
+        {(profile?.identity_snapshot?.roles?.length > 0 || profile?.identity_snapshot?.strengths?.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {profile.identity_snapshot.roles?.length > 0 && (
+              <div className="soft-card p-5 sm:p-6">
+                <h3 className="text-text-secondary text-[11px] uppercase tracking-widest font-bold mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-indigo-500 text-base">architecture</span>
+                  Roles Clave
+                </h3>
+                <ul className="space-y-2">
+                  {profile.identity_snapshot.roles.map((p: string, i: number) => (
+                    <li key={i} className="text-sm text-text-main flex items-start gap-2">
+                      <span className="text-indigo-400 font-bold mt-0.5">•</span>
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {profile.identity_snapshot.strengths?.length > 0 && (
               <div className="soft-card p-5 sm:p-6">
                 <h3 className="text-text-secondary text-[11px] uppercase tracking-widest font-bold mb-3 flex items-center gap-2">
                   <span className="material-symbols-outlined text-amber-500 text-base">star</span>
-                  Fortalezas
+                  Fortalezas Clave
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {profile.identity_snapshot.strengths.map((s: string, i: number) => (
@@ -190,53 +203,40 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
-            {profile.identity_snapshot.tools?.length > 0 && (
-              <div className="soft-card p-5 sm:p-6">
-                <h3 className="text-text-secondary text-[11px] uppercase tracking-widest font-bold mb-3 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-cyan-500 text-base">build</span>
-                  Herramientas
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {profile.identity_snapshot.tools.map((t: string, i: number) => (
-                    <span key={i} className="px-3 py-1.5 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700 border border-cyan-100">{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {/* PROJECTS */}
+        {/* OPERATIONAL FRONTS (Mapped to Projects) */}
         <div>
           <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
             <h3 className="text-text-main text-lg font-bold tracking-tight">Proyectos Activos</h3>
-            <span className="text-sm text-text-secondary font-medium">{profile?.projects?.length || 0} proyectos</span>
+            <span className="text-sm text-text-secondary font-medium">{profile?.projects?.length || 0} activos</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {profile?.projects?.map((p: any, i: number) => {
               const c = getStatusColor(p.status);
               return (
-                <div key={i} className="soft-card p-5 sm:p-6 flex flex-col cursor-pointer group">
+                <div key={i} className="soft-card p-5 sm:p-6 flex flex-col cursor-pointer group hover:border-primary/20 transition-colors">
                   <div className="flex justify-between items-start mb-3">
                     <h4 className="text-base sm:text-lg font-bold text-text-main group-hover:text-primary transition-colors">{p.name}</h4>
                     <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded ${c.bg} ${c.text} ${c.border} border`}>{p.status}</span>
                   </div>
                   {p.current_focus && (
-                    <p className="text-sm text-text-secondary mb-3 leading-relaxed">{p.current_focus}</p>
+                    <p className="text-sm text-text-secondary mb-3 leading-relaxed"><strong className="text-slate-600">Foco:</strong> {p.current_focus}</p>
                   )}
-                  {p.goals?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {p.goals.slice(0, 3).map((g: string, gi: number) => (
-                        <span key={gi} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-50 text-text-secondary border border-slate-100 font-medium">{g}</span>
-                      ))}
+                  {p.blockers && p.blockers.length > 0 && (
+                    <div className="mb-3 p-2.5 rounded-xl bg-red-50/50 border border-red-100 text-xs text-red-700">
+                      <strong className="flex items-center gap-1 mb-1"><span className="material-symbols-outlined text-[14px]">warning</span> Riesgo</strong>
+                      {p.blockers[0]}
                     </div>
                   )}
                   <div className="mt-auto pt-3 border-t border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <div className={`size-2 rounded-full ${c.dot}`} />
-                      <span className="text-xs text-text-secondary font-medium capitalize">{p.status}</span>
+                      {p.next_steps && p.next_steps.length > 0 && (
+                        <span className="text-xs text-text-secondary font-medium truncate max-w-[200px]"><strong className="text-slate-500">Próximo:</strong> {p.next_steps[0]}</span>
+                      )}
                     </div>
-                    <div className="size-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors text-slate-400">
+                    <div className="size-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors text-slate-400 shrink-0">
                       <span className="material-symbols-outlined text-lg">arrow_forward</span>
                     </div>
                   </div>
@@ -251,28 +251,28 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* PIPELINE + DECISIONS */}
+        {/* NETWORK + DECISIONS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          {/* PIPELINE */}
+          {/* LEADS PIPELINE */}
           <div className="soft-card p-5 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-text-secondary text-sm font-bold tracking-wide uppercase flex items-center gap-2">
-                <span className="material-symbols-outlined text-purple-500 text-lg">filter_alt</span>
-                Pipeline Intel
+                <span className="material-symbols-outlined text-cyan-600 text-lg">hub</span>
+                Leads & Contactos
               </h3>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-4">
               {profile?.leads_pipeline?.slice(0, 5).map((l: any, i: number) => (
-                <div key={i}>
-                  <div className="flex justify-between text-xs mb-2 items-end">
-                    <span className="text-text-main font-semibold">{l.name || l.name_or_company}
-                      {l.company && <span className="text-slate-400 font-normal ml-1">{l.company}</span>}
-                    </span>
-                    <span className="text-purple-600 font-bold text-sm bg-purple-50 px-2 py-0.5 rounded">{l.stage}</span>
+                <div key={i} className="p-3 rounded-xl border border-slate-100 bg-white shadow-sm">
+                  <div className="flex justify-between text-xs mb-1 items-start">
+                    <span className="text-text-main font-bold">{l.name}</span>
+                    <span className="text-cyan-700 font-bold text-[10px] bg-cyan-50 px-2 py-0.5 rounded uppercase">{l.status}</span>
                   </div>
+                  {l.context && <p className="text-[11px] text-slate-500 mb-2">{l.context}</p>}
                   {l.next_action && (
-                    <p className="text-[11px] text-text-secondary flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[11px]">arrow_forward</span>{l.next_action}
+                    <p className="text-[11px] text-text-secondary flex items-start gap-1">
+                      <span className="material-symbols-outlined text-[14px] text-cyan-600">arrow_forward</span>
+                      <span className="font-medium text-slate-700">{l.next_action}</span>
                     </p>
                   )}
                 </div>
@@ -288,7 +288,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-text-secondary text-sm font-bold tracking-wide uppercase flex items-center gap-2">
                 <span className="material-symbols-outlined text-slate-400 text-lg">history_edu</span>
-                Decision Log
+                Decisiones Recientes
               </h3>
             </div>
             <div className="relative pl-4 border-l-2 border-slate-200 space-y-5">
@@ -296,7 +296,8 @@ export default function DashboardPage() {
                 <div key={i} className="relative">
                   <div className={`absolute -left-[21px] top-1 size-2.5 rounded-full bg-white border-2 ${i === 0 ? "border-blue-500" : "border-slate-300"} shadow-sm`} />
                   <h4 className="text-text-main text-sm font-semibold mb-0.5">{d.decision}</h4>
-                  {d.rationale && <p className="text-slate-500 text-xs leading-relaxed">{d.rationale}</p>}
+                  {d.reasoning && <p className="text-slate-500 text-[11px] leading-relaxed mb-1">{d.reasoning}</p>}
+                  {d.impact && <p className="text-indigo-600 text-[10px] font-medium leading-relaxed bg-indigo-50/50 inline-block px-1 rounded">{d.impact}</p>}
                 </div>
               ))}
               {(!profile?.recent_decisions || profile.recent_decisions.length === 0) && (
@@ -306,20 +307,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* KNOWLEDGE TIMELINE */}
+        {/* KNOWLEDGE INSIGHTS */}
         <div className="soft-card p-5 sm:p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-50/50 blur-[80px] rounded-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-50/50 blur-[80px] rounded-full pointer-events-none" />
           <h3 className="text-text-secondary text-[11px] uppercase tracking-widest font-bold mb-5 flex items-center gap-2 pb-3 border-b border-slate-100 relative z-10">
-            <span className="material-symbols-outlined text-cyan-500 text-base">school</span>
+            <span className="material-symbols-outlined text-emerald-500 text-base">psychology</span>
             Conocimiento Adquirido
           </h3>
-          <div className="relative pl-5 border-l-2 border-slate-100 space-y-5 z-10">
+          <div className="relative pl-5 border-l-2 border-slate-100 space-y-6 z-10">
             {profile?.knowledge_updates?.map((k: any, i: number) => (
-              <div key={i} className="relative group">
-                <div className="absolute -left-[23px] top-1 size-2.5 rounded-full bg-white border-2 border-slate-300 group-hover:border-cyan-500 transition-all" />
-                <h4 className="text-sm text-text-main font-semibold group-hover:text-cyan-600 transition-colors mb-0.5">{k.topic}</h4>
-                <p className="text-xs text-text-secondary leading-relaxed">{k.summary}</p>
-                {k.implications && <p className="text-[10px] text-slate-400 mt-1 italic">{k.implications}</p>}
+              <div key={i} className="relative group p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
+                <div className="absolute -left-[27px] top-4 size-3 rounded-full bg-white border-2 border-slate-300 group-hover:border-emerald-500 transition-all shadow-sm" />
+                <h4 className="text-sm text-text-main font-bold mb-1">{k.topic}</h4>
+                <p className="text-xs text-slate-600 leading-relaxed mb-2">{k.detail || k.insight}</p>
               </div>
             ))}
             {(!profile?.knowledge_updates || profile.knowledge_updates.length === 0) && (
@@ -335,7 +335,7 @@ export default function DashboardPage() {
         {/* STRATEGIC DIRECTION */}
         <div className="soft-card p-5 sm:p-6 relative overflow-hidden border-t-4 border-t-primary shadow-soft-2xl">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-text-main text-base font-bold tracking-tight">Strategic Pulse</h3>
+            <h3 className="text-text-main text-base font-bold tracking-tight">Dirección Estratégica</h3>
             <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wide">Live</span>
@@ -348,28 +348,47 @@ export default function DashboardPage() {
                 <div className="p-1 bg-amber-100 rounded text-amber-600">
                   <span className="material-symbols-outlined text-sm block">stars</span>
                 </div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">North Star</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Misión / Objetivo</span>
               </div>
               <p className="text-text-main text-sm font-medium leading-relaxed">
-                {profile?.strategic_direction?.north_star || "Visión a largo plazo por definir."}
+                {profile?.strategic_direction?.north_star || "Aún no hay un objetivo de alto nivel definido."}
               </p>
             </div>
+
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-1 bg-blue-100 rounded text-blue-600">
                   <span className="material-symbols-outlined text-sm block">center_focus_strong</span>
                 </div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Foco Actual</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Foco Inmediato</span>
               </div>
-              <p className="text-text-main text-sm font-medium leading-relaxed">
-                {profile?.strategic_direction?.current_focus || "Sin foco inmediato definido."}
-              </p>
+              {profile?.strategic_direction?.current_focus && (
+                <ul className="space-y-1">
+                  {typeof profile.strategic_direction.current_focus === 'string' ? (
+                    <li className="text-text-main text-sm font-medium leading-relaxed flex items-start gap-1">
+                      <span className="text-blue-500">•</span> {profile.strategic_direction.current_focus}
+                    </li>
+                  ) : Array.isArray(profile.strategic_direction.current_focus) && profile.strategic_direction.current_focus.length > 0 ? (
+                    profile.strategic_direction.current_focus.map((f: string, i: number) => (
+                      <li key={i} className="text-text-main text-sm font-medium leading-relaxed flex items-start gap-1">
+                        <span className="text-blue-500">•</span> {f}
+                      </li>
+                    ))
+                  ) : (
+                    <p className="text-text-main text-sm font-medium leading-relaxed">Sin foco inmediato definido.</p>
+                  )}
+                </ul>
+              )}
+              {!profile?.strategic_direction?.current_focus && (
+                <p className="text-text-main text-sm font-medium leading-relaxed">Sin foco inmediato definido.</p>
+              )}
             </div>
+
             {profile?.strategic_direction?.why_now && (
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="p-1 bg-indigo-100 rounded text-indigo-600">
-                    <span className="material-symbols-outlined text-sm block">bolt</span>
+                    <span className="material-symbols-outlined text-sm block">crisis_alert</span>
                   </div>
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Por qué ahora</span>
                 </div>
@@ -379,24 +398,24 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* RISKS */}
-        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-5 sm:p-6">
+        {/* CRITICAL FRICTION */}
+        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-5 sm:p-6 shadow-sm">
           <h3 className="text-red-800 text-[10px] font-bold tracking-widest uppercase mb-4 flex items-center gap-2">
             <span className="material-symbols-outlined text-sm">warning</span>
-            Riesgos e Incógnitas
+            Riesgos y Cuellos de Botella
           </h3>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {profile?.risks_unknowns?.map((r: any, i: number) => (
-              <li key={i} className="flex items-start gap-3">
-                <div className="mt-1.5 size-1.5 rounded-full bg-red-400 shrink-0" />
+              <li key={i} className="flex items-start gap-3 bg-white p-3 rounded-xl border border-red-100">
+                <div className="mt-1 size-2 rounded-full bg-red-400 shrink-0" />
                 <div>
-                  <span className="text-xs text-slate-700 font-medium leading-normal block">{r.risk}</span>
-                  {r.mitigation && <span className="text-[10px] text-slate-500 leading-normal block mt-0.5">{r.mitigation}</span>}
+                  <span className="text-xs text-red-900 font-bold uppercase tracking-wide block mb-1">Riesgo / Desconocido</span>
+                  <span className="text-xs text-slate-700 font-medium leading-relaxed block">{typeof r === 'string' ? r : r.risk}</span>
                 </div>
               </li>
             ))}
             {(!profile?.risks_unknowns || profile.risks_unknowns.length === 0) && (
-              <li className="text-xs text-slate-500 py-2">Sin riesgos críticos registrados.</li>
+              <li className="text-xs text-slate-500 py-2">Sin fricción crítica registrada.</li>
             )}
           </ul>
         </div>
@@ -405,11 +424,11 @@ export default function DashboardPage() {
         <div className="soft-card p-5 sm:p-6">
           <h3 className="text-purple-700 text-[11px] uppercase tracking-widest font-bold mb-3 flex items-center gap-2">
             <span className="material-symbols-outlined text-sm">edit_note</span>
-            Estilo de Comunicación
+            Reglas de Comunicación
           </h3>
           {profile?.communication_style?.tone && (
             <div className="mb-3 p-3 rounded-xl bg-purple-50 border border-purple-100">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Tono</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Tono Master</span>
               <p className="text-sm text-text-main font-semibold capitalize">{profile.communication_style.tone}</p>
             </div>
           )}
@@ -429,31 +448,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* QUICK LINKS */}
-        <div className="soft-card p-5 sm:p-6">
-          <h3 className="text-text-secondary text-[11px] uppercase tracking-widest font-bold mb-3 flex items-center gap-2">
-            <span className="material-symbols-outlined text-base text-slate-400">link</span>
-            Acciones Rápidas
-          </h3>
-          <div className="flex flex-col gap-1.5">
-            <Link href="/sources/add" className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
-              <span className="material-symbols-outlined text-primary text-lg group-hover:scale-110 transition-transform">add_circle</span>
-              <span className="text-sm text-text-main font-medium group-hover:text-primary transition-colors">Añadir nueva fuente</span>
-            </Link>
-            <Link href="/chat" className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
-              <span className="material-symbols-outlined text-cyan-500 text-lg group-hover:scale-110 transition-transform">chat</span>
-              <span className="text-sm text-text-main font-medium group-hover:text-cyan-600 transition-colors">Consultar motor</span>
-            </Link>
-            <Link href="/packs" className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
-              <span className="material-symbols-outlined text-purple-500 text-lg group-hover:scale-110 transition-transform">share</span>
-              <span className="text-sm text-text-main font-medium group-hover:text-purple-600 transition-colors">Exportar contexto</span>
-            </Link>
-            <Link href="/settings" className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
-              <span className="material-symbols-outlined text-slate-400 text-lg group-hover:scale-110 transition-transform">settings</span>
-              <span className="text-sm text-text-main font-medium group-hover:text-slate-600 transition-colors">Configuración</span>
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );

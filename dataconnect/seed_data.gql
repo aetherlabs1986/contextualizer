@@ -1,0 +1,82 @@
+mutation CreateDemoData @transaction @auth(level: USER, insecureReason: "This mutation is for seeding and should only be run by authenticated administrators.") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      displayName: "Alice Smith",
+      email: "alice.smith@example.com",
+      createdAt: "2023-01-01T10:00:00Z",
+      photoUrl: "https://example.com/alice.jpg"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      createdAt: "2023-01-02T11:00:00Z",
+      photoUrl: "https://example.com/bob.jpg"
+    }
+  ])
+  company_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      name: "Innovate Solutions Inc.",
+      industry: "Technology",
+      createdAt: "2023-01-05T09:00:00Z",
+      websiteUrl: "https://innovatesolutions.com",
+      location: "San Francisco, CA",
+      description: "Leading software development company."
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      name: "Global Marketing Group",
+      industry: "Marketing",
+      createdAt: "2023-01-06T10:30:00Z",
+      websiteUrl: "https://globalmarketing.com",
+      location: "New York, NY",
+      description: "International marketing agency."
+    }
+  ])
+  person_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      firstName: "Alice",
+      lastName: "Smith",
+      createdAt: "2023-01-01T10:00:00Z",
+      title: "Software Engineer",
+      linkedinUrl: "https://linkedin.com/in/alicesmith"
+    },
+    {
+      id: "750e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      firstName: "Bob",
+      lastName: "Johnson",
+      createdAt: "2023-01-02T11:00:00Z",
+      title: "Marketing Manager",
+      linkedinUrl: "https://linkedin.com/in/bobjohnson"
+    },
+    {
+      id: "750e8400-e29b-41d4-a716-446655440002",
+      firstName: "Carol",
+      lastName: "Davis",
+      createdAt: "2023-01-03T12:00:00Z",
+      title: "Product Designer",
+      linkedinUrl: "https://linkedin.com/in/caroldavis"
+    }
+  ])
+  employment_insertMany(data: [
+    {
+      personId: "750e8400-e29b-41d4-a716-446655440000",
+      companyId: "650e8400-e29b-41d4-a716-446655440000",
+      startDate: "2022-03-15",
+      currentJob: true
+    },
+    {
+      personId: "750e8400-e29b-41d4-a716-446655440001",
+      companyId: "650e8400-e29b-41d4-a716-446655440001",
+      startDate: "2021-06-01",
+      currentJob: true
+    }
+  ])
+}

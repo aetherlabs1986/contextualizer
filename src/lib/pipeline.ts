@@ -3,7 +3,6 @@ import { generateEmbedding, generateJSON } from "./llm";
 import { getPromptTemplate, fillPrompt } from "./prompts";
 
 function chunkText(text: string, maxTokens: number = 900, overlap: number = 150): string[] {
-    // Simple heuristic: 1 token ~ 4 characters
     const chunkSize = maxTokens * 4;
     const overlapSize = overlap * 4;
     const chunks: string[] = [];
@@ -18,7 +17,6 @@ function chunkText(text: string, maxTokens: number = 900, overlap: number = 150)
 
 export async function processSource(sourceId: string) {
     try {
-        // 1. Mark as processing
         await prisma.sources.update({
             where: { id: sourceId },
             data: { processing_status: "processing" }
@@ -27,7 +25,7 @@ export async function processSource(sourceId: string) {
         const source = await prisma.sources.findUnique({ where: { id: sourceId } });
         if (!source || !source.extracted_text) throw new Error("Source not found or missing text");
 
-        // STEP B & C: Chunking & Embeddings
+        // Chunking & Embeddings
         const textChunks = chunkText(source.extracted_text);
 
         for (let i = 0; i < textChunks.length; i++) {
@@ -56,7 +54,7 @@ export async function processSource(sourceId: string) {
             });
         }
 
-        // STEP D: Insight Extraction (LLM)
+        // Insight Extraction (LLM)
         const extractTemplate = await getPromptTemplate("INSIGHT_EXTRACT_V1", source.user_id);
         const filledExtractPrompt = fillPrompt(extractTemplate, {
             source_id: source.id,
@@ -68,56 +66,56 @@ export async function processSource(sourceId: string) {
             extracted_text: source.extracted_text
         });
 
-        const insightsJson = await generateJSON(filledExtractPrompt, "gemini-2.5-flash"); // faster extraction
+        const insightsJson = await generateJSON(filledExtractPrompt, "gemini-2.5-flash");
 
-        // Save insights to DB
-        const allInsights = [];
+        // Save raw insights to DB
         const mapping: Record<string, string> = {
+            identity_updates: "identity",
+            strategic_vectors: "strategy",
+            operational_fronts: "front",
+            network: "network",
             decisions: "decision",
-            leads: "lead",
-            knowledge: "knowledge",
-            risks_unknowns: "risk",
-            strategic_shifts: "strategic_shift",
-            tasks_next_steps: "task",
-            personal_context: "personal_context"
+            knowledge_insights: "knowledge",
+            friction_points: "friction",
+            communication_rules: "communication"
         };
 
         for (const [key, type] of Object.entries(mapping)) {
             if (insightsJson[key] && Array.isArray(insightsJson[key])) {
                 for (const item of insightsJson[key]) {
-                    const dbInsight = await prisma.insights.create({
+                    const title = item.name || item.entity || item.topic || item.decision || item.value || item.description || "Generated Insight";
+                    await prisma.insights.create({
                         data: {
                             user_id: source.user_id,
                             project_id: source.project_id,
                             source_id: source.id,
                             insight_type: type,
-                            title: item.decision || item.name_or_company || item.topic || item.risk || item.task || item.shift || item.fact || "Generated Insight",
+                            title: String(title).substring(0, 100),
                             details: JSON.stringify(item),
                             entities_json: JSON.stringify(item.entities || {}),
                             date_inferred: item.date_inferred ? new Date(item.date_inferred) : null,
                             confidence: item.confidence || 0.8
                         }
                     });
-                    allInsights.push(dbInsight);
                 }
             }
         }
 
-        // STEP E: Profile Merge
+        // Profile Merge
         const lastProfile = await prisma.profile_snapshots.findFirst({
             where: { user_id: source.user_id, is_current: true, project_id: source.project_id },
             orderBy: { created_at: "desc" }
         });
 
         const previousProfileStr = lastProfile?.profile_json || JSON.stringify({
-            identity_snapshot: { summary: "", roles: [], strengths: [], tools: [] },
-            projects: [],
-            strategic_direction: { north_star: "", current_focus: "", why_now: "", constraints: [], source_ids: [] },
-            leads_pipeline: [],
-            recent_decisions: [],
-            knowledge_updates: [],
-            risks_unknowns: [],
-            communication_style: { tone: "", preferences_do: [], avoid: [], language: "es" }
+            identity: { summary: "", operating_principles: [], core_strengths: [] },
+            strategy: { north_star: "", immediate_focus: "", why_now: "" },
+            fronts: [],
+            network: [],
+            decisions: [],
+            knowledge_base: [],
+            friction: [],
+            communication: { tone: "", do: [], dont: [] }
         });
 
         const mergeTemplate = await getPromptTemplate("PROFILE_MERGE_V1", source.user_id);
@@ -128,7 +126,7 @@ export async function processSource(sourceId: string) {
             new_insights: JSON.stringify(insightsJson, null, 2)
         });
 
-        const mergedProfileJson = await generateJSON(filledMergePrompt, "gemini-2.5-pro"); // need more reasoning
+        const mergedProfileJson = await generateJSON(filledMergePrompt, "gemini-2.5-pro");
 
         await prisma.profile_snapshots.updateMany({
             where: { user_id: source.user_id, project_id: source.project_id },

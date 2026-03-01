@@ -70,7 +70,7 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [lang, setLang] = useState<Language>("en");
+    const [lang, setLang] = useState<Language>("es");
 
     useEffect(() => {
         const saved = localStorage.getItem("contextualizer_lang");
