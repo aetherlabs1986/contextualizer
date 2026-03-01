@@ -17,10 +17,12 @@ let app: FirebaseApp | undefined;
 let auth: Auth | any = null;
 let db: Firestore | any = null;
 
-if (typeof window !== "undefined" || process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+if (process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
     db = getFirestore(app);
+} else {
+    console.warn("⚠️ FIREBASE_API_KEY missing. Firebase is not initialized.");
 }
 
 export { app, auth, db };
