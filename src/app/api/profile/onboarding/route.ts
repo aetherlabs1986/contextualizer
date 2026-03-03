@@ -12,9 +12,9 @@ const generateSlug = (firstName: string, lastName: string, birthDate: string) =>
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { firstName, lastName, birthDate, email } = body;
+        const { firstName, lastName, birthDate, email, uid } = body;
 
-        if (!firstName || !lastName || !birthDate || !email) {
+        if (!firstName || !lastName || !birthDate || !email || !uid) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
                 slug,
             },
             create: {
+                id: uid,
                 email,
                 first_name: firstName,
                 last_name: lastName,

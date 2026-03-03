@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
     try {
-        const { question, projectId, threadId: reqThreadId } = await req.json();
+        const { question, projectId, threadId: reqThreadId, userId } = await req.json();
 
-        const user = await prisma.users.findUnique({ where: { email: "user@example.com" } });
+        if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+
+        const user = await prisma.users.findUnique({ where: { id: userId } });
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         let threadId = reqThreadId;

@@ -3,11 +3,15 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useUserProfile } from "@/contexts/UserProfileContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const { activeProjectId } = useProject();
   const { userProfile, updateProfile, isConfigured } = useUserProfile();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [data, setData] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -15,10 +19,11 @@ export default function DashboardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const { auth } = await import("@/lib/firebase");
-      const uid = auth.currentUser?.uid || "1";
+      const uid = auth.currentUser?.uid || user.uid;
 
       const res = await fetch(`/api/profile?user_id=${uid}${activeProjectId ? `&projectId=${activeProjectId}` : ""}`);
       const json = await res.json();
@@ -32,9 +37,15 @@ export default function DashboardPage() {
       console.error("Failed to load dashboard", e);
     }
     setLoading(false);
-  }, [activeProjectId]);
+  }, [activeProjectId, user]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    } else if (user) {
+      fetchData();
+    }
+  }, [authLoading, user, router, fetchData]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

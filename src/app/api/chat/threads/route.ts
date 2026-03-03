@@ -3,9 +3,13 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
-        const user = await prisma.users.findUnique({ where: { email: "user@example.com" } });
+        const url = new URL(req.url);
+        const userId = url.searchParams.get("userId");
+        if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+
+        const user = await prisma.users.findUnique({ where: { id: userId } });
         if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const threads = await prisma.chat_threads.findMany({

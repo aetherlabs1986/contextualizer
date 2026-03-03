@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useProject } from "@/contexts/ProjectContext";
 import { Send, Bot, User, Bookmark, Menu, Plus, MessageSquare, Mic, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Message = {
     id: string;
@@ -21,6 +22,7 @@ type Thread = {
 
 export default function ChatPage() {
     const { activeProjectId } = useProject();
+    const { user } = useAuth();
     const [threads, setThreads] = useState<Thread[]>([]);
     const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -117,12 +119,15 @@ export default function ChatPage() {
 
     // Load Threads
     useEffect(() => {
-        loadThreads();
-    }, []);
+        if (user) {
+            loadThreads();
+        }
+    }, [user]);
 
     const loadThreads = async () => {
+        if (!user) return;
         try {
-            const res = await fetch("/api/chat/threads");
+            const res = await fetch(`/api/chat/threads?userId=${user.uid}`);
             const data = await res.json();
             if (data.threads) setThreads(data.threads);
         } catch (e) {
@@ -138,7 +143,7 @@ export default function ChatPage() {
         if (window.innerWidth < 1024) setSidebarOpen(false);
 
         try {
-            const res = await fetch("/api/chat/threads/" + threadId);
+            const res = await fetch(`/api/chat/threads/${threadId}?userId=${user?.uid}`);
             const data = await res.json();
             if (data.messages) {
                 const loadedMessages = data.messages.map((m: any) => ({
@@ -179,7 +184,8 @@ export default function ChatPage() {
                 body: JSON.stringify({
                     question,
                     projectId: activeProjectId,
-                    threadId: activeThreadId
+                    threadId: activeThreadId,
+                    userId: user?.uid
                 })
             });
             const data = await res.json();

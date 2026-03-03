@@ -13,7 +13,11 @@ export default function LoginPage() {
     useEffect(() => {
         if (user) {
             // Check if user has completed onboarding by hitting the profile API
-            fetch("/api/profile/check-onboarding")
+            if (!user.email) {
+                router.push("/onboarding");
+                return;
+            }
+            fetch(`/api/profile/check-onboarding?email=${encodeURIComponent(user.email)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.needsOnboarding) {
