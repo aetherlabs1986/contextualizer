@@ -8,15 +8,25 @@ export async function POST(req: Request) {
     try {
         const data = await req.json();
 
-        // Temporarily, we will use the user profile ID if provided in data, 
-        // or default to finding the user by email, or creating a default one,
-        // because we haven't wired up strict bearer token auth everywhere yet.
         let userId = data.user_id;
 
         if (!userId) {
             let user = await prisma.users.findUnique({ where: { email: "user@example.com" } });
             if (!user) user = await prisma.users.create({ data: { id: "default-user", email: "user@example.com", first_name: "Default", last_name: "User" } });
             userId = user.id;
+        } else {
+            // Upsert user if they don't exist in postgres to prevent FK constraint failure
+            let dbUser = await prisma.users.findUnique({ where: { id: userId } });
+            if (!dbUser) {
+                await prisma.users.create({
+                    data: {
+                        id: userId,
+                        email: `${userId}@placeholder.com`,
+                        first_name: "New",
+                        last_name: "User"
+                    }
+                });
+            }
         }
 
         const source = await prisma.sources.create({
