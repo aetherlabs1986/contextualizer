@@ -80,8 +80,8 @@ export async function processChatMutation(userId: string, projectId: string | nu
     }
 }
 
-export async function retrieveAndAnswer(question: string, projectId: string | null, chatHistory: { role: string, content: string }[] = []) {
-    const user = await prisma.users.findUnique({ where: { email: "user@example.com" } });
+export async function retrieveAndAnswer(question: string, projectId: string | null, chatHistory: { role: string, content: string }[] = [], userId: string) {
+    const user = await prisma.users.findUnique({ where: { id: userId } });
     if (!user) throw new Error("Unauthorized");
 
     const queryEmbedding = await generateEmbedding(question);

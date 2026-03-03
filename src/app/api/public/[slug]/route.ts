@@ -8,7 +8,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
     try {
         const slug = params.slug;
 
-        const user = await prisma.users.findUnique({ where: { email: "user@example.com" } });
+        const user = await prisma.users.findUnique({ where: { slug: slug } });
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
         const snapshot = await prisma.profile_snapshots.findFirst({

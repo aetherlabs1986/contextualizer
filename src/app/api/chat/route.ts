@@ -10,8 +10,12 @@ export async function POST(req: Request) {
 
         if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 });
 
-        const user = await prisma.users.findUnique({ where: { id: userId } });
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        let user = await prisma.users.findUnique({ where: { id: userId } });
+        if (!user) {
+            user = await prisma.users.create({
+                data: { id: userId, email: `${userId}@placeholder.com`, first_name: "New", last_name: "User" }
+            });
+        }
 
         let threadId = reqThreadId;
 
@@ -46,7 +50,7 @@ export async function POST(req: Request) {
 
         const chatHistory = pastMessages.map(m => ({ role: m.role, content: m.content }));
 
-        const result = await retrieveAndAnswer(question, projectId || null, chatHistory);
+        const result = await retrieveAndAnswer(question, projectId || null, chatHistory, user.id);
 
         // Save Assistant response
         const assistantMsg = await prisma.chat_messages.create({
