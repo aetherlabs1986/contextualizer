@@ -96,7 +96,7 @@ export function TextImportWizard() {
             {/* Header info */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
+                    <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-900">
                         <span className="material-symbols-outlined text-primary">auto_awesome</span>
                         Añadir Conocimiento Directo
                     </h2>
@@ -105,12 +105,12 @@ export function TextImportWizard() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 bg-background-light/50 dark:bg-background-dark/50 rounded-xl border border-border-light dark:border-border-dark overflow-y-auto p-4 space-y-4 mb-4 shadow-inner min-h-[300px]">
+            <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-y-auto p-4 space-y-4 mb-4 shadow-inner min-h-[300px]">
                 {messages.map((m, i) => (
                     <div key={i} className={`flex w-full ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm ${m.role === "user"
-                                ? "bg-primary text-white rounded-tr-sm"
-                                : "bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-800 dark:text-slate-200 tracking-wide rounded-tl-sm"
+                            ? "bg-primary text-white rounded-tr-sm"
+                            : "bg-white border border-slate-200 text-slate-800 tracking-wide rounded-tl-sm"
                             }`}>
                             {m.content}
                         </div>
@@ -135,7 +135,7 @@ export function TextImportWizard() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleSend(); }}
                     placeholder="Ej: 'El cliente XYZ prefiere reuniones por las mañanas...'"
-                    className="flex-1 h-12 px-4 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm shadow-sm disabled:opacity-50"
+                    className="flex-1 h-12 px-4 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm shadow-sm disabled:opacity-50"
                     disabled={isSaving || saved}
                 />
                 <button
@@ -147,14 +147,14 @@ export function TextImportWizard() {
                 </button>
             </div>
 
-            <div className="mt-6 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+            <div className="mt-6 flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <p className="text-xs text-slate-500 w-2/3 leading-relaxed">
-                    <strong className="text-slate-700 dark:text-slate-300">Nota:</strong> Los mensajes que envíes aquí se integrarán y analizarán automáticamente como una nueva fuente de conocimiento para el perfil activo.
+                    <strong className="text-slate-700">Nota:</strong> Los mensajes que envíes aquí se integrarán y analizarán automáticamente como una nueva fuente de conocimiento para el perfil activo.
                 </p>
                 <button
                     onClick={handleSaveContext}
                     disabled={messages.length === 1 || isSaving || saved}
-                    className="h-10 px-6 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+                    className="h-10 px-6 rounded-lg bg-slate-900 text-white text-sm font-bold shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                 >
                     {isSaving ? (
                         <>

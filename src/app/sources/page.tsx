@@ -62,7 +62,7 @@ export default function SourcesPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* PDF Document Card */}
                         <div
-                            onClick={() => router.push("/sources/add")}
+                            onClick={() => router.push("/sources/add?type=document")}
                             className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col items-center text-center group cursor-pointer"
                         >
                             <div className="size-16 rounded-xl bg-slate-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-blue-500">
@@ -75,7 +75,7 @@ export default function SourcesPage() {
 
                         {/* Audio Card */}
                         <div
-                            onClick={() => router.push("/sources/add")}
+                            onClick={() => router.push("/sources/add?type=audio")}
                             className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col items-center text-center group cursor-pointer"
                         >
                             <div className="size-16 rounded-xl bg-slate-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-purple-500">
@@ -88,7 +88,7 @@ export default function SourcesPage() {
 
                         {/* Text Card */}
                         <div
-                            onClick={() => router.push("/sources/add")}
+                            onClick={() => router.push("/sources/add?type=text")}
                             className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col items-center text-center group cursor-pointer"
                         >
                             <div className="size-16 rounded-xl bg-slate-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-green-500">
@@ -100,7 +100,7 @@ export default function SourcesPage() {
                         </div>
 
                         {/* Google Drive Card */}
-                        <div onClick={() => router.push("/sources/add")} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col items-center text-center group cursor-pointer">
+                        <div onClick={() => router.push("/sources/add?type=googledrive")} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col items-center text-center group cursor-pointer">
                             <div className="size-16 rounded-xl bg-slate-50 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                                 <img alt="Google Drive Logo" className="size-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGG-k4juYo1cxzdDLAoDU2ZBZijFte1OG6M89s4XP5JtjhKcIdXSoHFe4CYN83MYzeKoq0xqoiOwhw8m4Bu8RCbXp8osvzEYd4IP3YOYt7LfF9lfVY-dWp4YwxV9Ry44Qyc2_p0_4YcgVE1ssuQo9737Gqy-SaDaUWVc-GGmxMFFcT5Oaxu43l5fYIwITY3uRTKMnjcw_y2KRDA-9bpVATVeQSHWHXPZX6LI1lP7DdzfQ60h64Kcqxd_xsI9FXE27HfU1M_hDz1IOl" />
                             </div>
